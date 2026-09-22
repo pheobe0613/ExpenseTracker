@@ -9,56 +9,78 @@
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --paper:#ECE7D6;
-    --paper-card:#F5F1E4;
-    --paper-deep:#DFD8BE;
-    --ink:#232B36;
-    --ink-soft:#5B5648;
-    --ink-faint:#8A8266;
-    --line:#C6BEA0;
-    --red:#9B3A2E;
-    --green:#3F6B4A;
-    --brass:#A9793C;
-    --navy:#2F4B6E;
-    --teal:#2F6E66;
-    --radius:5px;
+    --bg1:#EAF2FF;
+    --bg2:#F1EAFF;
+    --bg3:#FFEFF5;
+    --glass:rgba(255,255,255,0.50);
+    --glass-strong:rgba(255,255,255,0.72);
+    --glass-input:rgba(255,255,255,0.60);
+    --glass-border:rgba(255,255,255,0.70);
+    --hairline:rgba(31,39,51,0.09);
+    --ink:#1F2733;
+    --ink-soft:#4C5566;
+    --ink-faint:#7C8698;
+    --red:#D9564A;
+    --green:#2E9E67;
+    --brass:#BD8A3F;
+    --navy:#3E6FD9;
+    --teal:#1F9C92;
+    --radius:18px;
+    --radius-sm:12px;
+    --shadow:0 10px 32px rgba(31,45,80,.14);
     --font-serif:'Source Serif 4','Noto Serif TC',serif;
     --font-sans:'Inter','PingFang TC','Microsoft JhengHei',sans-serif;
   }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
-      --paper:#1B2129;
-      --paper-card:#232B35;
-      --paper-deep:#2C3541;
-      --ink:#EDE7D6;
-      --ink-soft:#C9C2A9;
-      --ink-faint:#8B8770;
-      --line:#3C4552;
-      --red:#D07468;
-      --green:#7FB88F;
-      --brass:#D3A868;
-      --navy:#7FA0C9;
-      --teal:#6FC2B6;
+      --bg1:#0C1220;
+      --bg2:#181030;
+      --bg3:#1B0F22;
+      --glass:rgba(32,38,54,0.55);
+      --glass-strong:rgba(32,38,54,0.76);
+      --glass-input:rgba(32,38,54,0.55);
+      --glass-border:rgba(255,255,255,0.12);
+      --hairline:rgba(255,255,255,0.12);
+      --ink:#EDEFF4;
+      --ink-soft:#C4CAD6;
+      --ink-faint:#8B93A3;
+      --red:#F0897C;
+      --green:#72D9A4;
+      --brass:#E4BB7E;
+      --navy:#8FB2FF;
+      --teal:#7BE3D6;
+      --shadow:0 10px 32px rgba(0,0,0,.5);
     }
   }
   :root[data-theme="dark"]{
-    --paper:#1B2129;
-    --paper-card:#232B35;
-    --paper-deep:#2C3541;
-    --ink:#EDE7D6;
-    --ink-soft:#C9C2A9;
-    --ink-faint:#8B8770;
-    --line:#3C4552;
-    --red:#D07468;
-    --green:#7FB88F;
-    --brass:#D3A868;
-    --navy:#7FA0C9;
-    --teal:#6FC2B6;
+    --bg1:#0C1220;
+    --bg2:#181030;
+    --bg3:#1B0F22;
+    --glass:rgba(32,38,54,0.55);
+    --glass-strong:rgba(32,38,54,0.76);
+    --glass-input:rgba(32,38,54,0.55);
+    --glass-border:rgba(255,255,255,0.12);
+    --hairline:rgba(255,255,255,0.12);
+    --ink:#EDEFF4;
+    --ink-soft:#C4CAD6;
+    --ink-faint:#8B93A3;
+    --red:#F0897C;
+    --green:#72D9A4;
+    --brass:#E4BB7E;
+    --navy:#8FB2FF;
+    --teal:#7BE3D6;
+    --shadow:0 10px 32px rgba(0,0,0,.5);
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{
-    background:var(--paper);
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 12% 10%, var(--bg1), transparent 55%),
+      radial-gradient(circle at 88% 18%, var(--bg2), transparent 55%),
+      radial-gradient(circle at 50% 95%, var(--bg3), transparent 60%),
+      var(--bg1);
+    background-attachment:fixed;
     color:var(--ink);
     font-family:var(--font-sans);
     line-height:1.5;
@@ -73,8 +95,12 @@
 
   /* ---------- Masthead ---------- */
   .masthead{
-    background:var(--ink);
-    color:var(--paper);
+    background:linear-gradient(135deg, rgba(38,49,71,.72), rgba(63,86,133,.58));
+    backdrop-filter:blur(22px);
+    -webkit-backdrop-filter:blur(22px);
+    border:1px solid var(--glass-border);
+    box-shadow:var(--shadow);
+    color:#F3F5FA;
     border-radius:var(--radius);
     padding:22px 22px 20px;
     margin-bottom:18px;
@@ -95,9 +121,9 @@
     margin:0 0 2px;
     letter-spacing:.2px;
   }
-  .brand .tagline{margin:0;font-size:12.5px;color:#C9C2A9;}
+  .brand .tagline{margin:0;font-size:12.5px;color:rgba(243,245,250,.72);}
   .networth{text-align:right;}
-  .networth-label{display:block;font-size:11.5px;color:#A9A28B;margin-bottom:2px;}
+  .networth-label{display:block;font-size:11.5px;color:rgba(243,245,250,.62);margin-bottom:2px;}
   .networth-value{
     font-family:var(--font-serif);
     font-size:30px;
@@ -124,30 +150,35 @@
   }
   .tab-btn{
     flex:0 0 auto;
-    background:var(--paper-card);
-    border:1px solid var(--line);
-    border-bottom:3px solid var(--line);
+    background:var(--glass);
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+    border:1px solid var(--glass-border);
+    border-bottom:3px solid var(--glass-border);
     color:var(--ink-soft);
     font-family:var(--font-sans);
     font-size:13.5px;
     font-weight:600;
     padding:8px 14px;
-    border-radius:var(--radius) var(--radius) 0 0;
+    border-radius:var(--radius-sm) var(--radius-sm) 0 0;
     cursor:pointer;
     white-space:nowrap;
   }
   .tab-btn.active{
     color:var(--ink);
     border-bottom-color:var(--red);
-    background:var(--paper-deep);
+    background:var(--glass-strong);
   }
-  .tab-btn.add-tab{color:var(--brass); border-style:dashed;}
+  .tab-btn.add-tab{color:var(--navy); border-style:dashed;}
   .tab-btn:focus-visible{outline:2px solid var(--navy); outline-offset:1px;}
 
   /* ---------- Cards ---------- */
   .card{
-    background:var(--paper-card);
-    border:1px solid var(--line);
+    background:var(--glass);
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+    border:1px solid var(--glass-border);
+    box-shadow:var(--shadow);
     border-radius:var(--radius);
     padding:16px;
   }
@@ -162,9 +193,12 @@
   }
   .grid-accounts::-webkit-scrollbar{display:none;width:0;height:0;}
   .acct-card{
-    background:var(--paper-card);
-    border:1px solid var(--line);
+    background:var(--glass);
+    backdrop-filter:blur(16px);
+    -webkit-backdrop-filter:blur(16px);
+    border:1px solid var(--glass-border);
     border-left:4px solid var(--navy);
+    box-shadow:var(--shadow);
     border-radius:var(--radius);
     padding:12px 14px;
     cursor:pointer;
@@ -186,7 +220,7 @@
   }
   .acct-card.add-card{
     display:flex;align-items:center;justify-content:center;
-    color:var(--brass);
+    color:var(--navy);
     border-style:dashed;
     border-left-style:dashed;
     font-size:13.5px;
@@ -205,9 +239,12 @@
   }
   .grid-cards::-webkit-scrollbar{display:none;width:0;height:0;}
   .cc-card{
-    background:var(--paper-card);
-    border:1px solid var(--line);
+    background:var(--glass);
+    backdrop-filter:blur(16px);
+    -webkit-backdrop-filter:blur(16px);
+    border:1px solid var(--glass-border);
     border-left:4px solid var(--red);
+    box-shadow:var(--shadow);
     border-radius:var(--radius);
     padding:12px 14px;
     cursor:pointer;
@@ -225,7 +262,7 @@
   }
   .cc-card.add-card{
     display:flex;align-items:center;justify-content:center;
-    color:var(--brass);
+    color:var(--navy);
     border-style:dashed;
     border-left-style:dashed;
     font-size:13.5px;
@@ -247,9 +284,12 @@
     margin-bottom:18px;
   }
   .week-cell{
-    background:var(--paper-card);
-    border:1px solid var(--line);
-    border-radius:var(--radius);
+    background:var(--glass);
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+    border:1px solid var(--glass-border);
+    box-shadow:var(--shadow);
+    border-radius:var(--radius-sm);
     padding:8px 2px 7px;
     text-align:center;
     cursor:pointer;
@@ -284,7 +324,8 @@
     font-size:11.5px;
     padding:3px 9px;
     border-radius:999px;
-    border:1px solid var(--line);
+    background:var(--glass-input);
+    border:1px solid var(--glass-border);
     color:var(--ink-soft);
     display:inline-flex;align-items:center;gap:5px;
   }
@@ -306,12 +347,12 @@
     color:var(--ink-faint);
     font-weight:600;
     padding:6px 8px;
-    border-bottom:1px solid var(--line);
+    border-bottom:1px solid var(--hairline);
     white-space:nowrap;
   }
   table.ledger td{
     padding:9px 8px;
-    border-bottom:1px solid var(--line);
+    border-bottom:1px solid var(--hairline);
     vertical-align:top;
   }
   table.ledger tr:last-child td{border-bottom:none;}
@@ -348,8 +389,11 @@
     font-variant-numeric:tabular-nums;
   }
   .icon-btn{
-    background:none;border:1px solid var(--line);
-    border-radius:var(--radius);
+    background:var(--glass-input);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    border:1px solid var(--glass-border);
+    border-radius:var(--radius-sm);
     color:var(--ink-soft);
     padding:6px 10px;font-size:12.5px;cursor:pointer;
     font-family:var(--font-sans);
@@ -364,11 +408,11 @@
     right:20px;bottom:20px;
     width:56px;height:56px;
     border-radius:50%;
-    background:var(--red);
-    color:#F5F1E4;
-    border:none;
+    background:linear-gradient(135deg, var(--navy), #6D93E8);
+    color:#FFFFFF;
+    border:1px solid rgba(255,255,255,.5);
     font-size:26px;
-    box-shadow:0 3px 10px rgba(0,0,0,.25);
+    box-shadow:0 10px 26px rgba(62,111,217,.45);
     cursor:pointer;
     z-index:20;
   }
@@ -377,7 +421,9 @@
   /* ---------- Modal ---------- */
   .overlay{
     position:fixed;inset:0;
-    background:rgba(20,20,15,.45);
+    background:rgba(20,26,38,.35);
+    backdrop-filter:blur(2px);
+    -webkit-backdrop-filter:blur(2px);
     display:none;
     align-items:flex-end;
     justify-content:center;
@@ -388,7 +434,11 @@
     .overlay{align-items:center;}
   }
   .modal{
-    background:var(--paper-card);
+    background:var(--glass-strong);
+    backdrop-filter:blur(26px);
+    -webkit-backdrop-filter:blur(26px);
+    border:1px solid var(--glass-border);
+    box-shadow:var(--shadow);
     width:100%;
     max-width:440px;
     border-radius:var(--radius) var(--radius) 0 0;
@@ -407,8 +457,9 @@
   }
   .seg{
     display:flex;
-    border:1px solid var(--line);
-    border-radius:var(--radius);
+    background:var(--glass-input);
+    border:1px solid var(--glass-border);
+    border-radius:var(--radius-sm);
     overflow:hidden;
     margin-bottom:14px;
   }
@@ -416,16 +467,16 @@
     flex:1;
     padding:9px 6px;
     border:none;
-    background:var(--paper-card);
+    background:transparent;
     color:var(--ink-soft);
     font-family:var(--font-sans);
     font-size:13px;
     font-weight:600;
     cursor:pointer;
-    border-right:1px solid var(--line);
+    border-right:1px solid var(--glass-border);
   }
   .seg button:last-child{border-right:none;}
-  .seg button.active{background:var(--ink);color:var(--paper);}
+  .seg button.active{background:var(--ink);color:#fff;}
   label{
     display:block;font-size:12px;color:var(--ink-soft);
     margin:12px 0 5px;
@@ -433,9 +484,9 @@
   input[type=text],input[type=number],input[type=date],select{
     width:100%;
     padding:9px 10px;
-    border:1px solid var(--line);
-    border-radius:var(--radius);
-    background:var(--paper);
+    border:1px solid var(--glass-border);
+    border-radius:var(--radius-sm);
+    background:var(--glass-input);
     color:var(--ink);
     font-family:var(--font-sans);
     font-size:14px;
@@ -447,35 +498,36 @@
   .method-pick label{
     flex:1;margin:0;
     display:flex;flex-direction:column;align-items:center;gap:4px;
-    border:1px solid var(--line);
-    border-radius:var(--radius);
+    background:var(--glass-input);
+    border:1px solid var(--glass-border);
+    border-radius:var(--radius-sm);
     padding:8px 4px;
     cursor:pointer;
     font-size:12px;
     color:var(--ink-soft);
   }
   .method-pick input{display:none;}
-  .method-pick label.active{border-color:var(--ink);background:var(--paper-deep);color:var(--ink);}
+  .method-pick label.active{border-color:var(--ink);background:var(--glass-strong);color:var(--ink);}
   .cat-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
   .cat-chip{
     font-size:12px;padding:4px 10px;border-radius:999px;
-    border:1px solid var(--line);background:var(--paper);
+    border:1px solid var(--glass-border);background:var(--glass-input);
     cursor:pointer;color:var(--ink-soft);
   }
-  .cat-chip.active{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+  .cat-chip.active{background:var(--ink);color:#fff;border-color:var(--ink);}
   .modal-actions{display:flex;gap:8px;margin-top:18px;}
   .btn{
-    flex:1;padding:11px;border-radius:var(--radius);
+    flex:1;padding:11px;border-radius:var(--radius-sm);
     font-family:var(--font-sans);font-size:14px;font-weight:600;
-    cursor:pointer;border:1px solid var(--line);
-    background:var(--paper);color:var(--ink-soft);
+    cursor:pointer;border:1px solid var(--glass-border);
+    background:var(--glass-input);color:var(--ink-soft);
   }
-  .btn.primary{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+  .btn.primary{background:var(--ink);color:#fff;border-color:var(--ink);}
   .btn.danger{color:var(--red);border-color:var(--red);}
   .field-error{color:var(--red);font-size:12px;margin-top:6px;display:none;}
   .swap-row{display:flex;align-items:center;gap:8px;}
   .swap-btn{
-    border:1px solid var(--line);background:var(--paper);
+    border:1px solid var(--glass-border);background:var(--glass-input);
     border-radius:50%;width:30px;height:30px;flex:0 0 auto;
     cursor:pointer;color:var(--ink-soft);font-size:13px;margin-top:14px;
   }
@@ -553,8 +605,17 @@
       </div>
     </div>
 
+    <div id="txEpayBlock" style="display:none;">
+      <label for="txEpayPlatform">電子支付平台</label>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <select id="txEpayPlatform" style="flex:1;"></select>
+        <button type="button" class="icon-btn" id="editPlatformBtn" title="編輯平台">✎</button>
+        <button type="button" class="icon-btn" id="addPlatformBtn" title="新增平台">＋</button>
+      </div>
+    </div>
+
     <div id="txCardBlock" style="display:none;">
-      <label for="txCard">信用卡</label>
+      <label for="txCard">支付的卡片</label>
       <select id="txCard"></select>
     </div>
 
@@ -620,6 +681,21 @@
   </div>
 </div>
 
+<!-- E-payment platform modal -->
+<div class="overlay" id="platformOverlay">
+  <div class="modal">
+    <h3 id="platformModalTitle">新增支付平台</h3>
+    <label for="platformName">平台名稱</label>
+    <input type="text" id="platformName" placeholder="例如：LINE Pay、街口支付">
+    <p class="field-error" id="platformError">請輸入平台名稱。</p>
+    <div class="modal-actions">
+      <button class="btn" id="platformCancel">取消</button>
+      <button class="btn danger" id="platformDelete" style="display:none;">刪除</button>
+      <button class="btn primary" id="platformSubmit">儲存</button>
+    </div>
+  </div>
+</div>
+
 <script>
 (function(){
   "use strict";
@@ -634,7 +710,14 @@
   var activeTab = "overview";
   var editingAccountId = null;
   var editingCardId = null;
+  var editingPlatformId = null;
   var selectedDay = null;
+
+  function defaultEpayPlatforms(){
+    return ["LINE Pay","街口支付","悠遊付","icash Pay","台灣Pay","Apple Pay","Google Pay"].map(function(name){
+      return { id: uid(), name: name };
+    });
+  }
 
   function loadState(){
     try{
@@ -643,6 +726,7 @@
         var parsed = JSON.parse(raw);
         if(parsed && Array.isArray(parsed.accounts) && Array.isArray(parsed.transactions)){
           if(!Array.isArray(parsed.cards)) parsed.cards = [];
+          if(!Array.isArray(parsed.epayPlatforms)) parsed.epayPlatforms = defaultEpayPlatforms();
           return parsed;
         }
       }
@@ -650,7 +734,8 @@
     return {
       accounts: [ {id: WALLET_ID, name:"現金錢包", type:"wallet", initialBalance:0} ],
       transactions: [],
-      cards: []
+      cards: [],
+      epayPlatforms: defaultEpayPlatforms()
     };
   }
 
@@ -730,6 +815,10 @@
 
   function getCard(id){
     return state.cards.filter(function(c){ return c.id === id; })[0];
+  }
+
+  function getEpayPlatform(id){
+    return state.epayPlatforms.filter(function(p){ return p.id === id; })[0];
   }
 
   function dateToStr(d){
@@ -820,6 +909,11 @@
     addBtn.textContent = "＋ 新增帳戶";
     addBtn.addEventListener("click", function(){ openAccountModal(null); });
     tabs.appendChild(addBtn);
+    var addCardTabBtn = document.createElement("button");
+    addCardTabBtn.className = "tab-btn add-tab";
+    addCardTabBtn.textContent = "＋ 新增卡片";
+    addCardTabBtn.addEventListener("click", function(){ openCardModal(null); });
+    tabs.appendChild(addCardTabBtn);
   }
 
   function makeTabBtn(id, label){
@@ -844,18 +938,21 @@
     });
     html += '</div>';
 
-    // credit cards
+    // credit cards (own section, in its original place — add button now lives in the tab bar)
     html += '<h2 class="section-title">信用卡</h2>';
-    html += '<div class="grid-cards">';
-    state.cards.forEach(function(c){
-      html += '<button class="cc-card" data-editcard="' + c.id + '">' +
-        '<span class="cc-name">' + escapeHtml(c.name) + '</span>' +
-        '<span class="cc-meta">每月' + c.statementDay + '日結帳</span>' +
-        '<span class="cc-amount">' + fmt(cardCycleSpend(c)) + '</span>' +
-      '</button>';
-    });
-    html += '<button class="cc-card add-card" id="addCardBtn">＋ 新增卡片</button>';
-    html += '</div>';
+    if(state.cards.length === 0){
+      html += '<div class="card empty-state" style="margin-bottom:18px;">還沒有信用卡，點上方「＋ 新增卡片」開始設定。</div>';
+    } else {
+      html += '<div class="grid-cards">';
+      state.cards.forEach(function(c){
+        html += '<button class="cc-card" data-editcard="' + c.id + '">' +
+          '<span class="cc-name">' + escapeHtml(c.name) + '</span>' +
+          '<span class="cc-meta">每月' + c.statementDay + '日結帳</span>' +
+          '<span class="cc-amount">' + fmt(cardCycleSpend(c)) + '</span>' +
+        '</button>';
+      });
+      html += '</div>';
+    }
 
     // summary
     var today = todayStr();
@@ -911,8 +1008,6 @@
     main.querySelectorAll("[data-editcard]").forEach(function(el){
       el.addEventListener("click", function(){ openCardModal(el.getAttribute("data-editcard")); });
     });
-    var addCardBtn = document.getElementById("addCardBtn");
-    if(addCardBtn) addCardBtn.addEventListener("click", function(){ openCardModal(null); });
     bindRowDeletes(main);
   }
 
@@ -1013,8 +1108,10 @@
       var cardTag = tx.cardId && getCard(tx.cardId) ? getCard(tx.cardId).name : "";
       main1 = tx.category || (tx.type === "income" ? "收入" : "支出");
       sub = [tx.note, (contextAccountId === null && acct ? acct.name : ""), cardTag].filter(Boolean).join("　");
+      var epayPlat = (tx.method === "epay" && tx.epayPlatformId) ? getEpayPlatform(tx.epayPlatformId) : null;
+      var methodDisplayLabel = epayPlat ? epayPlat.name : methodLabel(tx.method);
       methodHtml = tx.method
-        ? '<span class="method-tag">' + methodIconHtml(tx.method) + methodLabel(tx.method) + '</span>'
+        ? '<span class="method-tag">' + methodIconHtml(tx.method) + methodDisplayLabel + '</span>'
         : '<span class="method-tag">利息</span>';
       if(tx.type === "expense") outVal = fmt(tx.amount);
       else inVal = fmt(tx.amount);
@@ -1066,6 +1163,7 @@
     document.getElementById("txAmount").value = "";
     document.getElementById("txNote").value = "";
     document.getElementById("txCat").value = "";
+    document.getElementById("txEpayPlatform").value = "";
     document.querySelector('input[name="method"][value="cash"]').checked = true;
     Array.prototype.forEach.call(document.getElementById("methodPick").children, function(l){
       l.classList.toggle("active", l.getAttribute("data-m") === "cash");
@@ -1101,18 +1199,32 @@
     document.getElementById("txMethodBlock").style.display = isTransfer ? "none" : "block";
     document.getElementById("txCatBlock").style.display = isTransfer ? "none" : "block";
     renderCatChips();
-    updateCardBlockVisibility();
+    updateMethodExtras();
   }
 
-  function updateCardBlockVisibility(){
+  function updateMethodExtras(){
     var checked = document.querySelector('input[name="method"]:checked');
     var selectedMethod = checked ? checked.value : "cash";
-    var show = txType !== "transfer" && selectedMethod === "card" && state.cards.length > 0;
-    document.getElementById("txCardBlock").style.display = show ? "block" : "none";
-    if(show){
+    var isTransfer = txType === "transfer";
+    var showEpay = !isTransfer && selectedMethod === "epay";
+    var showCard = !isTransfer && (selectedMethod === "card" || selectedMethod === "epay") && state.cards.length > 0;
+    var showAccount = !isTransfer && selectedMethod === "cash";
+    document.getElementById("txAccountBlock").style.display = showAccount ? "block" : "none";
+    document.getElementById("txEpayBlock").style.display = showEpay ? "block" : "none";
+    document.getElementById("txCardBlock").style.display = showCard ? "block" : "none";
+    if(showEpay) populateEpayPlatformSelect();
+    if(showCard){
       document.getElementById("txCard").innerHTML = '<option value="">未指定</option>' +
         state.cards.map(function(c){ return '<option value="' + c.id + '">' + escapeHtml(c.name) + '</option>'; }).join("");
     }
+  }
+
+  function populateEpayPlatformSelect(){
+    var sel = document.getElementById("txEpayPlatform");
+    var current = sel.value;
+    sel.innerHTML = '<option value="">請選擇</option>' +
+      state.epayPlatforms.map(function(p){ return '<option value="' + p.id + '">' + escapeHtml(p.name) + '</option>'; }).join("");
+    if(current && getEpayPlatform(current)) sel.value = current;
   }
 
   function populateAccountSelects(){
@@ -1139,7 +1251,19 @@
     Array.prototype.forEach.call(document.getElementById("methodPick").children, function(l){
       l.classList.toggle("active", l === label);
     });
-    updateCardBlockVisibility();
+    updateMethodExtras();
+  });
+
+  document.getElementById("addPlatformBtn").addEventListener("click", function(){
+    openPlatformModal(null);
+  });
+  document.getElementById("editPlatformBtn").addEventListener("click", function(){
+    var id = document.getElementById("txEpayPlatform").value;
+    if(!id){
+      openPlatformModal(null);
+      return;
+    }
+    openPlatformModal(id);
   });
 
   function renderCatChips(){
@@ -1188,14 +1312,17 @@
         fromId: fromId, toId: toId, note: note
       });
     } else {
-      var accountId = document.getElementById("txAccount").value;
+      var accountId = (document.getElementById("txAccountBlock").style.display !== "none")
+        ? document.getElementById("txAccount").value : null;
       var method = document.querySelector('input[name="method"]:checked').value;
       var category = document.getElementById("txCat").value.trim();
       var cardId = (document.getElementById("txCardBlock").style.display !== "none")
         ? (document.getElementById("txCard").value || null) : null;
+      var epayPlatformId = (document.getElementById("txEpayBlock").style.display !== "none")
+        ? (document.getElementById("txEpayPlatform").value || null) : null;
       state.transactions.push({
         id: uid(), type: txType, date: date, amount: amount,
-        accountId: accountId, method: method, category: category, note: note, cardId: cardId
+        accountId: accountId, method: method, category: category, note: note, cardId: cardId, epayPlatformId: epayPlatformId
       });
     }
 
@@ -1359,6 +1486,58 @@
     saveState();
     closeCardModal();
     render();
+  });
+
+  // ---------- E-payment platform modal ----------
+
+  var platformOverlay = document.getElementById("platformOverlay");
+
+  function openPlatformModal(id){
+    editingPlatformId = id;
+    var isEdit = !!id;
+    document.getElementById("platformModalTitle").textContent = isEdit ? "編輯支付平台" : "新增支付平台";
+    document.getElementById("platformError").style.display = "none";
+    document.getElementById("platformDelete").style.display = isEdit ? "block" : "none";
+    document.getElementById("platformName").value = isEdit ? (getEpayPlatform(id) ? getEpayPlatform(id).name : "") : "";
+    platformOverlay.classList.add("open");
+  }
+  function closePlatformModal(){ platformOverlay.classList.remove("open"); }
+
+  document.getElementById("platformCancel").addEventListener("click", closePlatformModal);
+  platformOverlay.addEventListener("click", function(e){ if(e.target === platformOverlay) closePlatformModal(); });
+
+  document.getElementById("platformSubmit").addEventListener("click", function(){
+    var name = document.getElementById("platformName").value.trim();
+    var err = document.getElementById("platformError");
+    if(!name){
+      err.style.display = "block";
+      return;
+    }
+    var savedId;
+    if(editingPlatformId){
+      var p = getEpayPlatform(editingPlatformId);
+      p.name = name;
+      savedId = p.id;
+    } else {
+      savedId = uid();
+      state.epayPlatforms.push({ id: savedId, name: name });
+    }
+    saveState();
+    closePlatformModal();
+    populateEpayPlatformSelect();
+    document.getElementById("txEpayPlatform").value = savedId;
+  });
+
+  document.getElementById("platformDelete").addEventListener("click", function(){
+    if(!editingPlatformId) return;
+    if(!confirm("確定要刪除這個支付平台嗎？已記錄的支出仍會保留，只是不再歸屬這個平台。")) return;
+    state.epayPlatforms = state.epayPlatforms.filter(function(p){ return p.id !== editingPlatformId; });
+    state.transactions.forEach(function(tx){
+      if(tx.epayPlatformId === editingPlatformId) tx.epayPlatformId = null;
+    });
+    saveState();
+    closePlatformModal();
+    populateEpayPlatformSelect();
   });
 
   render();

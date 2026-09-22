@@ -941,7 +941,8 @@
     html += '<div class="grid-accounts">';
     state.accounts.forEach(function(a){
       html += '<button class="acct-card' + (a.type==="wallet" ? " wallet" : "") + '" data-goto="' + a.id + '">' +
-        '<span class="acct-name">' + escapeHtml(a.name) + (a.isSavings ? "　·　年利率 " + a.interestRate + "%" : "") + '</span>' +
+        '<span class="acct-name">' + escapeHtml(a.name) + '</span>' +
+        '<span class="acct-name">' + (a.isSavings ? "年利率 " + a.interestRate + "%" : "") + '</span>'+
         '<span class="acct-balance">' + fmt(accountBalance(a.id)) + '</span>' +
       '</button>';
     });

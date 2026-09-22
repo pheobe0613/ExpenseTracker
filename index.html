@@ -441,10 +441,12 @@
     box-shadow:var(--shadow);
     width:100%;
     max-width:440px;
+    box-sizing:border-box;
     border-radius:var(--radius) var(--radius) 0 0;
     padding:20px;
     max-height:88vh;
     overflow-y:auto;
+    overflow-x:hidden;
     scrollbar-width:none;
     -ms-overflow-style:none;
   }
@@ -483,13 +485,20 @@
   }
   input[type=text],input[type=number],input[type=date],select{
     width:100%;
+    max-width:100%;
+    min-width:0;
     padding:9px 10px;
     border:1px solid var(--glass-border);
     border-radius:var(--radius-sm);
     background:var(--glass-input);
     color:var(--ink);
     font-family:var(--font-sans);
-    font-size:14px;
+    font-size:16px;
+    box-sizing:border-box;
+  }
+  input[type=date]{
+    -webkit-appearance:none;
+    appearance:none;
   }
   input:focus-visible,select:focus-visible,button:focus-visible{
     outline:2px solid var(--navy);outline-offset:1px;
@@ -574,7 +583,7 @@
     <input type="date" id="txDate">
 
     <label for="txAmount">金額</label>
-    <input type="number" id="txAmount" min="0" step="1" placeholder="0">
+    <input type="number" id="txAmount" inputmode="numeric" pattern="[0-9]*" min="0" step="1" placeholder="0">
 
     <div id="txAccountBlock">
       <label for="txAccount">帳戶</label>

@@ -131,6 +131,20 @@
     font-variant-numeric:tabular-nums;
   }
 
+  /* ---------- Site nav ---------- */
+  .site-links{display:flex;gap:8px;margin-bottom:16px;}
+  .site-link{
+    font-size:12.5px;font-weight:600;
+    padding:6px 13px;border-radius:999px;
+    background:var(--glass-input);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    border:1px solid var(--glass-border);
+    color:var(--ink-soft);
+    text-decoration:none;
+  }
+  .site-link.active{background:var(--glass-strong);color:var(--ink);border-color:var(--ink);}
+
   /* ---------- Tabs ---------- */
   .tabs{
     display:flex;
@@ -561,6 +575,11 @@
     </div>
   </header>
 
+  <nav class="site-links">
+    <a href="index.html" class="site-link active">🧾 記帳本</a>
+    <a href="goals.html" class="site-link">🎯 存錢目標</a>
+  </nav>
+
   <nav class="tabs" id="tabs"></nav>
 
   <main id="mainView"></main>
@@ -581,6 +600,15 @@
 
     <label for="txDate">日期</label>
     <input type="date" id="txDate">
+
+    <div id="txMethodBlock">
+      <label>支付方式</label>
+      <div class="method-pick" id="methodPick">
+        <label data-m="cash" class="active"><span class="m-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2.6"></circle></svg></span>現金<input type="radio" name="method" value="cash" checked></label>
+        <label data-m="card"><span class="m-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg></span>刷卡<input type="radio" name="method" value="card"></label>
+        <label data-m="epay"><span class="m-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"></rect><line x1="11" y1="18" x2="13" y2="18"></line></svg></span>電子支付<input type="radio" name="method" value="epay"></label>
+      </div>
+    </div>
 
     <label for="txAmount">金額</label>
     <input type="number" id="txAmount" inputmode="numeric" pattern="[0-9]*" min="0" step="1" placeholder="0">
@@ -605,20 +633,11 @@
       <p class="sum-note" style="margin-top:8px;">帳戶間轉帳不計入支出統計</p>
     </div>
 
-    <div id="txMethodBlock">
-      <label>支付方式</label>
-      <div class="method-pick" id="methodPick">
-        <label data-m="cash" class="active"><span class="m-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"></rect><circle cx="12" cy="12" r="2.6"></circle></svg></span>現金<input type="radio" name="method" value="cash" checked></label>
-        <label data-m="card"><span class="m-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg></span>刷卡<input type="radio" name="method" value="card"></label>
-        <label data-m="epay"><span class="m-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"></rect><line x1="11" y1="18" x2="13" y2="18"></line></svg></span>電子支付<input type="radio" name="method" value="epay"></label>
-      </div>
-    </div>
-
     <div id="txEpayBlock" style="display:none;">
       <label for="txEpayPlatform">電子支付平台</label>
       <div style="display:flex;gap:6px;align-items:center;">
         <select id="txEpayPlatform" style="flex:1;"></select>
-        <button type="button" class="icon-btn" id="editPlatformBtn" title="編輯平台">✎</button>
+        <button type="button" class="icon-btn" id="editPlatformBtn" title="管理平台列表">✎</button>
         <button type="button" class="icon-btn" id="addPlatformBtn" title="新增平台">＋</button>
       </div>
     </div>
@@ -701,6 +720,18 @@
       <button class="btn" id="platformCancel">取消</button>
       <button class="btn danger" id="platformDelete" style="display:none;">刪除</button>
       <button class="btn primary" id="platformSubmit">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- E-payment platform list management modal -->
+<div class="overlay" id="platformListOverlay">
+  <div class="modal">
+    <h3>管理電子支付平台</h3>
+    <p class="sum-note">取消勾選「顯示」可以先把平台從選單中隱藏，之後需要時再打勾就會重新出現。</p>
+    <div id="platformListWrap" style="margin-top:10px;"></div>
+    <div class="modal-actions">
+      <button class="btn primary" id="platformListClose">完成</button>
     </div>
   </div>
 </div>
@@ -941,8 +972,7 @@
     html += '<div class="grid-accounts">';
     state.accounts.forEach(function(a){
       html += '<button class="acct-card' + (a.type==="wallet" ? " wallet" : "") + '" data-goto="' + a.id + '">' +
-        '<span class="acct-name">' + escapeHtml(a.name) + '</span>' +
-        '<span class="acct-name">' + (a.isSavings ? "年利率 " + a.interestRate + "%" : "") + '</span>'+
+        '<span class="acct-name">' + escapeHtml(a.name) + (a.isSavings ? "　·　年利率 " + a.interestRate + "%" : "") + '</span>' +
         '<span class="acct-balance">' + fmt(accountBalance(a.id)) + '</span>' +
       '</button>';
     });
@@ -1232,9 +1262,10 @@
   function populateEpayPlatformSelect(){
     var sel = document.getElementById("txEpayPlatform");
     var current = sel.value;
+    var visible = state.epayPlatforms.filter(function(p){ return !p.hidden; });
     sel.innerHTML = '<option value="">請選擇</option>' +
-      state.epayPlatforms.map(function(p){ return '<option value="' + p.id + '">' + escapeHtml(p.name) + '</option>'; }).join("");
-    if(current && getEpayPlatform(current)) sel.value = current;
+      visible.map(function(p){ return '<option value="' + p.id + '">' + escapeHtml(p.name) + '</option>'; }).join("");
+    if(current && getEpayPlatform(current) && !getEpayPlatform(current).hidden) sel.value = current;
   }
 
   function populateAccountSelects(){
@@ -1268,12 +1299,7 @@
     openPlatformModal(null);
   });
   document.getElementById("editPlatformBtn").addEventListener("click", function(){
-    var id = document.getElementById("txEpayPlatform").value;
-    if(!id){
-      openPlatformModal(null);
-      return;
-    }
-    openPlatformModal(id);
+    openPlatformListModal();
   });
 
   function renderCatChips(){
@@ -1549,6 +1575,82 @@
     closePlatformModal();
     populateEpayPlatformSelect();
   });
+
+  // ---------- E-payment platform list management modal ----------
+
+  var platformListOverlay = document.getElementById("platformListOverlay");
+
+  function openPlatformListModal(){
+    renderPlatformListRows();
+    platformListOverlay.classList.add("open");
+  }
+  function closePlatformListModal(){
+    platformListOverlay.classList.remove("open");
+    populateEpayPlatformSelect();
+  }
+
+  function renderPlatformListRows(){
+    var wrap = document.getElementById("platformListWrap");
+    if(state.epayPlatforms.length === 0){
+      wrap.innerHTML = '<p class="sum-note">尚未新增任何電子支付平台。</p>';
+      return;
+    }
+    var visible = state.epayPlatforms.filter(function(p){ return !p.hidden; });
+    var hidden = state.epayPlatforms.filter(function(p){ return p.hidden; });
+
+    function rowHtml(p){
+      return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">' +
+        '<input type="text" data-platname="' + p.id + '" value="' + escapeHtml(p.name) + '" style="flex:1;">' +
+        '<label style="display:flex;align-items:center;gap:4px;font-size:11.5px;color:var(--ink-soft);white-space:nowrap;">' +
+          '<input type="checkbox" data-platvis="' + p.id + '" style="width:auto;margin:0;"' + (p.hidden ? '' : ' checked') + '>' +
+        '</label>' +
+        '<button type="button" class="row-del" data-platdel="' + p.id + '" title="刪除">✕</button>' +
+      '</div>';
+    }
+
+    var html = visible.map(rowHtml).join("");
+    if(hidden.length > 0){
+      html += '<p class="sum-note" style="margin:12px 0 8px;">已隱藏</p>';
+      html += hidden.map(rowHtml).join("");
+    }
+    wrap.innerHTML = html;
+
+    wrap.querySelectorAll("[data-platname]").forEach(function(inp){
+      inp.addEventListener("change", function(){
+        var p = getEpayPlatform(inp.getAttribute("data-platname"));
+        if(p){
+          var newName = inp.value.trim();
+          if(newName) p.name = newName; else inp.value = p.name;
+          saveState();
+        }
+      });
+    });
+    wrap.querySelectorAll("[data-platvis]").forEach(function(cb){
+      cb.addEventListener("change", function(){
+        var p = getEpayPlatform(cb.getAttribute("data-platvis"));
+        if(p){
+          p.hidden = !cb.checked;
+          saveState();
+          renderPlatformListRows();
+        }
+      });
+    });
+    wrap.querySelectorAll("[data-platdel]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var id = btn.getAttribute("data-platdel");
+        if(!confirm("確定要刪除這個支付平台嗎？已記錄的支出仍會保留，只是不再歸屬這個平台。")) return;
+        state.epayPlatforms = state.epayPlatforms.filter(function(p){ return p.id !== id; });
+        state.transactions.forEach(function(tx){
+          if(tx.epayPlatformId === id) tx.epayPlatformId = null;
+        });
+        saveState();
+        renderPlatformListRows();
+      });
+    });
+  }
+
+  document.getElementById("platformListClose").addEventListener("click", closePlatformListModal);
+  platformListOverlay.addEventListener("click", function(e){ if(e.target === platformListOverlay) closePlatformListModal(); });
 
   render();
 })();

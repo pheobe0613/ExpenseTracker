@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>多帳戶記帳本</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+CiAgPHJlY3QgeD0iOCIgeT0iNiIgd2lkdGg9IjQwIiBoZWlnaHQ9IjUyIiByeD0iNSIgZmlsbD0iIzJGNEI2RSIvPgogIDxyZWN0IHg9IjEyIiB5PSIxMCIgd2lkdGg9IjMyIiBoZWlnaHQ9IjQ0IiByeD0iMi41IiBmaWxsPSIjRjVGMUU0Ii8+CiAgPHJlY3QgeD0iMTciIHk9IjE5IiB3aWR0aD0iMjIiIGhlaWdodD0iMy4yIiByeD0iMS42IiBmaWxsPSIjOEE4MjY2Ii8+CiAgPHJlY3QgeD0iMTciIHk9IjI3IiB3aWR0aD0iMjIiIGhlaWdodD0iMy4yIiByeD0iMS42IiBmaWxsPSIjOEE4MjY2Ii8+CiAgPHJlY3QgeD0iMTciIHk9IjM1IiB3aWR0aD0iMTQiIGhlaWdodD0iMy4yIiByeD0iMS42IiBmaWxsPSIjRDk1NjRBIi8+CiAgPHJlY3QgeD0iMTciIHk9IjQzIiB3aWR0aD0iMTgiIGhlaWdodD0iMy4yIiByeD0iMS42IiBmaWxsPSIjM0Y2QjRBIi8+CiAgPHBhdGggZD0iTTQ0IDYgSDUyIFYyOCBMNDggMjIgTDQ0IDI4IFoiIGZpbGw9IiNEOTU2NEEiLz4KPC9zdmc+Cg==">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1602,7 +1603,7 @@
       return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">' +
         '<input type="text" data-platname="' + p.id + '" value="' + escapeHtml(p.name) + '" style="flex:1;">' +
         '<label style="display:flex;align-items:center;gap:4px;font-size:11.5px;color:var(--ink-soft);white-space:nowrap;">' +
-          '<input type="checkbox" data-platvis="' + p.id + '" style="width:auto;margin:0;"' + (p.hidden ? '' : ' checked') + '>' +
+          '<input type="checkbox" data-platvis="' + p.id + '" style="width:auto;margin:0;"' + (p.hidden ? '' : ' checked') + '> 顯示' +
         '</label>' +
         '<button type="button" class="row-del" data-platdel="' + p.id + '" title="刪除">✕</button>' +
       '</div>';

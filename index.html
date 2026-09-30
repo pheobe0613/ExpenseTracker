@@ -335,7 +335,6 @@
   .week-cell .wd-amt.exp{color:var(--red);}
 
   .summary-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
-  @media (max-width:520px){.summary-row{grid-template-columns:1fr;}}
   .summary-card .sum-label{font-size:12px;color:var(--ink-faint);margin-bottom:2px;}
   .summary-card .sum-value{
     font-family:var(--font-serif);
@@ -1112,11 +1111,10 @@
       '<div class="sum-label">' + title + '</div>' +
       '<div class="sum-value">' + fmt(totals.all) + '</div>' +
       '<div class="chip-row">' +
-        '<span class="chip">' + methodIconHtml("cash") + '現金 ' + fmt(totals.cash) + '</span>' +
-        '<span class="chip">' + methodIconHtml("card") + '刷卡 ' + fmt(totals.card) + '</span>' +
-        '<span class="chip">' + methodIconHtml("epay") + '電子支付 ' + fmt(totals.epay) + '</span>' +
+        '<span class="chip">' + methodIconHtml("cash") + fmt(totals.cash) + '</span>' +
+        '<span class="chip">' + methodIconHtml("card") + fmt(totals.card) + '</span>' +
+        '<span class="chip">' + methodIconHtml("epay") + fmt(totals.epay) + '</span>' +
       '</div>' +
-      '<div class="sum-note">不含帳戶間轉帳</div>' +
     '</div>';
   }
 
@@ -1152,19 +1150,9 @@
       return tx.accountId === id || tx.fromId === id || tx.toId === id;
     }).sort(byDateAsc);
 
-    // running balance (transfers still affect balance even though they aren't listed)
-    var running = acct.initialBalance || 0;
-    var rows = [];
-    txs.forEach(function(tx){
-      if(tx.type === "income" && tx.accountId === id) running += Math.round(tx.amount).toLocaleString("zh-Hant-TW");
-      else if(tx.type === "expense" && tx.accountId === id) running -= Math.round(tx.amount).toLocaleString("zh-Hant-TW");
-      else if(tx.type === "transfer" && tx.fromId === id) running -= Math.round(tx.amount).toLocaleString("zh-Hant-TW");
-      else if(tx.type === "transfer" && tx.toId === id) running += Math.round(tx.amount).toLocaleString("zh-Hant-TW");
-      if(tx.type !== "transfer"){
-        rows.push(renderTxRow(tx, id, running));
-      }
-    });
-    rows.reverse();
+    var rows = txs.map(function(tx){
+      return renderTxRow(tx, id);
+    }).reverse();
 
     html += '<div class="card ledger-wrap">';
     if(rows.length === 0){
@@ -1188,30 +1176,44 @@
   }
 
   function renderTxRow(tx, contextAccountId, runningBalance){
-    if(tx.type === "transfer") return "";
+    if(tx.type === "transfer" && contextAccountId === null) return "";
 
     var dateShort = tx.date.slice(5).replace("-", "/");
     var main1 = "", noteSub = "", methodHtml = "", outVal = "", inVal = "", acctCardText = "";
 
-    var acct = getAccount(tx.accountId);
-    var card = tx.cardId ? getCard(tx.cardId) : null;
-    main1 = tx.category || (tx.type === "income" ? "收入" : "支出");
-    noteSub = tx.note || "";
-    var epayPlat = (tx.method === "epay" && tx.epayPlatformId) ? getEpayPlatform(tx.epayPlatformId) : null;
-    var methodDisplayLabel = epayPlat ? epayPlat.name : methodLabel(tx.method);
-    methodHtml = tx.method
-      ? '<span class="method-tag">' + methodIconHtml(tx.method) + methodDisplayLabel + '</span>'
-      : '<span class="method-tag">利息</span>';
-    if(tx.type === "expense") outVal = Math.round(tx.amount).toLocaleString("zh-Hant-TW");
-    else inVal = Math.round(tx.amount).toLocaleString("zh-Hant-TW");
-    acctCardText = card ? card.name : (acct ? acct.name : "");
+    if(tx.type === "transfer"){
+      var fromAcct = getAccount(tx.fromId);
+      var toAcct = getAccount(tx.toId);
+      main1 = "轉帳";
+      noteSub = tx.note || "";
+      acctCardText = (fromAcct?fromAcct.name:"—") + " → " + (toAcct?toAcct.name:"—");
+      methodHtml = '<span class="method-tag">⇄ 轉帳</span>';
+      if(contextAccountId === tx.fromId){
+        outVal = Math.round(tx.amount).toLocaleString("zh-Hant-TW");
+      } else if(contextAccountId === tx.toId){
+        inVal = Math.round(tx.amount).toLocaleString("zh-Hant-TW");
+      }
+    } else {
+      var acct = getAccount(tx.accountId);
+      var card = tx.cardId ? getCard(tx.cardId) : null;
+      main1 = tx.category || (tx.type === "income" ? "收入" : "支出");
+      noteSub = tx.note || "";
+      var epayPlat = (tx.method === "epay" && tx.epayPlatformId) ? getEpayPlatform(tx.epayPlatformId) : null;
+      var methodDisplayLabel = epayPlat ? epayPlat.name : methodLabel(tx.method);
+      methodHtml = tx.method
+        ? '<span class="method-tag">' + methodIconHtml(tx.method) + methodDisplayLabel + '</span>'
+        : '<span class="method-tag">利息</span>';
+      if(tx.type === "expense") outVal = Math.round(tx.amount).toLocaleString("zh-Hant-TW");
+      else inVal = Math.round(tx.amount).toLocaleString("zh-Hant-TW");
+      acctCardText = card ? card.name : (acct ? acct.name : "");
+    }
 
     var balCell = (typeof runningBalance === "number") ? '<td class="num bal">' + fmt(runningBalance) + '</td>' : "";
     var acctCell = (contextAccountId === null) ? ('<td>' + (acctCardText ? escapeHtml(acctCardText) : '') + '</td>') : "";
 
     return '<tr>' +
       '<td>' + dateShort + '</td>' +
-      '<td><div class="memo-main">' + escapeHtml(main1) + '</div></td>' +
+      '<td><div class="memo-main">' + escapeHtml(main1) + '</div>' + (noteSub ? '<div class="memo-sub">' + escapeHtml(noteSub) + '</div>' : '') + '</td>' +
       '<td>' + methodHtml + '</td>' +
       acctCell +
       '<td class="num out">' + outVal + '</td>' +

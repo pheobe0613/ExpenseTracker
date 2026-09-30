@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>投資紀錄</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg1:#EAF2FF;
+    --bg2:#F1EAFF;
+    --bg3:#FFEFF5;
+    --glass:rgba(255,255,255,0.50);
+    --glass-strong:rgba(255,255,255,0.72);
+    --glass-input:rgba(255,255,255,0.60);
+    --glass-border:rgba(255,255,255,0.70);
+    --hairline:rgba(31,39,51,0.09);
+    --ink:#1F2733;
+    --ink-soft:#4C5566;
+    --ink-faint:#7C8698;
+    --red:#D9564A;
+    --green:#2E9E67;
+    --brass:#BD8A3F;
+    --navy:#3E6FD9;
+    --teal:#1F9C92;
+    --radius:18px;
+    --radius-sm:12px;
+    --shadow:0 10px 32px rgba(31,45,80,.14);
+    --font-serif:'Source Serif 4','Noto Serif TC',serif;
+    --font-sans:'Inter','PingFang TC','Microsoft JhengHei',sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg1:#0C1220; --bg2:#181030; --bg3:#1B0F22;
+      --glass:rgba(32,38,54,0.55); --glass-strong:rgba(32,38,54,0.76);
+      --glass-input:rgba(32,38,54,0.55); --glass-border:rgba(255,255,255,0.12);
+      --hairline:rgba(255,255,255,0.12);
+      --ink:#EDEFF4; --ink-soft:#C4CAD6; --ink-faint:#8B93A3;
+      --red:#F0897C; --green:#72D9A4; --brass:#E4BB7E; --navy:#8FB2FF; --teal:#7BE3D6;
+      --shadow:0 10px 32px rgba(0,0,0,.5);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg1:#0C1220; --bg2:#181030; --bg3:#1B0F22;
+    --glass:rgba(32,38,54,0.55); --glass-strong:rgba(32,38,54,0.76);
+    --glass-input:rgba(32,38,54,0.55); --glass-border:rgba(255,255,255,0.12);
+    --hairline:rgba(255,255,255,0.12);
+    --ink:#EDEFF4; --ink-soft:#C4CAD6; --ink-faint:#8B93A3;
+    --red:#F0897C; --green:#72D9A4; --brass:#E4BB7E; --navy:#8FB2FF; --teal:#7BE3D6;
+    --shadow:0 10px 32px rgba(0,0,0,.5);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 12% 10%, var(--bg1), transparent 55%),
+      radial-gradient(circle at 88% 18%, var(--bg2), transparent 55%),
+      radial-gradient(circle at 50% 95%, var(--bg3), transparent 60%),
+      var(--bg1);
+    background-attachment:fixed;
+    color:var(--ink);
+    font-family:var(--font-sans);
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;}
+  }
+  a{color:inherit;text-decoration:none;}
+  button{font:inherit;color:inherit;}
+  .wrap{max-width:820px;margin:0 auto;padding:20px 16px 100px;}
+
+  /* ---------- Masthead ---------- */
+  .masthead{
+    background:linear-gradient(135deg, rgba(38,49,71,.72), rgba(63,86,133,.58));
+    backdrop-filter:blur(22px); -webkit-backdrop-filter:blur(22px);
+    border:1px solid var(--glass-border);
+    box-shadow:var(--shadow);
+    color:#F3F5FA;
+    border-radius:var(--radius);
+    padding:22px 22px 20px;
+    margin-bottom:14px;
+  }
+  .masthead-inner{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:14px;}
+  .brand{display:flex;align-items:center;gap:12px;}
+  .brand-mark{font-size:28px;line-height:1;}
+  .brand h1{font-family:var(--font-serif);font-size:21px;font-weight:600;margin:0 0 2px;letter-spacing:.2px;}
+  .brand .tagline{margin:0;font-size:12.5px;color:rgba(243,245,250,.72);}
+  .networth{text-align:right;}
+  .networth-label{display:block;font-size:11.5px;color:rgba(243,245,250,.62);margin-bottom:2px;}
+  .networth-value{font-family:var(--font-serif);font-size:30px;font-weight:700;font-variant-numeric:tabular-nums;}
+
+  /* ---------- Site nav ---------- */
+  .site-links{display:flex;gap:8px;margin-bottom:16px;}
+  .site-link{
+    font-size:12.5px;font-weight:600;
+    padding:6px 13px;border-radius:999px;
+    background:var(--glass-input);
+    backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+    border:1px solid var(--glass-border);
+    color:var(--ink-soft);
+  }
+  .site-link.active{background:var(--glass-strong);color:var(--ink);border-color:var(--ink);}
+
+  /* ---------- Tabs ---------- */
+  .tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;margin-bottom:16px;scrollbar-width:none;-ms-overflow-style:none;}
+  .tabs::-webkit-scrollbar,.ledger-wrap::-webkit-scrollbar,.modal::-webkit-scrollbar{display:none;width:0;height:0;}
+  .tab-btn{
+    flex:0 0 auto;
+    background:var(--glass);
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+    border:1px solid var(--glass-border);
+    border-bottom:3px solid var(--glass-border);
+    color:var(--ink-soft);
+    font-family:var(--font-sans);font-size:13.5px;font-weight:600;
+    padding:8px 14px;border-radius:var(--radius-sm) var(--radius-sm) 0 0;
+    cursor:pointer;white-space:nowrap;
+  }
+  .tab-btn.active{color:var(--ink);border-bottom-color:var(--teal);background:var(--glass-strong);}
+  .tab-btn.add-tab{color:var(--navy); border-style:dashed;}
+  .tab-btn:focus-visible{outline:2px solid var(--navy); outline-offset:1px;}
+
+  /* ---------- Cards ---------- */
+  .card{
+    background:var(--glass);
+    backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+    border:1px solid var(--glass-border);
+    box-shadow:var(--shadow);
+    border-radius:var(--radius);
+    padding:16px;
+  }
+  .section-title{font-family:var(--font-serif);font-size:15px;font-weight:600;margin:0 0 10px;}
+  .empty-state{text-align:center;padding:30px 10px;color:var(--ink-faint);font-size:13.5px;}
+
+  .summary-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px;}
+  @media (max-width:520px){.summary-row{grid-template-columns:1fr 1fr;}}
+  .summary-card .sum-label{font-size:12px;color:var(--ink-faint);margin-bottom:2px;}
+  .summary-card .sum-value{font-family:var(--font-serif);font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;}
+  .summary-card .sum-value.pos{color:var(--green);}
+  .summary-card .sum-value.neg{color:var(--red);}
+  .summary-card .sum-note{font-size:11px;color:var(--ink-faint);margin-top:2px;}
+
+  .grid-stocks{display:flex;gap:10px;overflow-x:auto;padding-bottom:2px;margin-bottom:18px;scrollbar-width:none;-ms-overflow-style:none;}
+  .grid-stocks::-webkit-scrollbar{display:none;width:0;height:0;}
+  .stock-card{
+    background:var(--glass);
+    backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+    border:1px solid var(--glass-border);
+    border-left:4px solid var(--navy);
+    box-shadow:var(--shadow);
+    border-radius:var(--radius);
+    padding:12px 14px;
+    cursor:pointer;text-align:left;
+    flex:0 0 168px;
+  }
+  .stock-card .stock-symbol{display:block;font-size:11.5px;color:var(--ink-faint);margin-bottom:2px;}
+  .stock-card .stock-name{display:block;font-size:13px;font-weight:600;margin-bottom:8px;}
+  .stock-card .stock-shares{font-size:11.5px;color:var(--ink-soft);margin-bottom:4px;}
+  .stock-card .stock-cost{font-family:var(--font-serif);font-size:15px;font-weight:700;color:var(--ink);}
+  .stock-card.add-card{
+    display:flex;align-items:center;justify-content:center;
+    color:var(--navy);border-style:dashed;border-left-style:dashed;
+    font-size:13.5px;font-weight:600;
+  }
+  .stock-card.highlight{
+    border-color:var(--brass);
+    border-left-color:var(--brass);
+    box-shadow:0 0 0 3px rgba(189,138,63,.22), var(--shadow);
+  }
+  .div-badge{
+    display:inline-block;font-size:10px;font-weight:700;
+    padding:2px 8px;border-radius:999px;
+    background:var(--brass);color:#fff;
+    margin-bottom:6px;white-space:nowrap;
+  }
+  .div-badge.scheduled{background:var(--glass-input);color:var(--brass);border:1px solid var(--brass);}
+
+  .month-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:2px;}
+  .month-btn{
+    padding:8px 4px;border:1px solid var(--glass-border);
+    border-radius:var(--radius-sm);background:var(--glass-input);
+    color:var(--ink-soft);font-family:var(--font-sans);
+    font-size:12.5px;font-weight:600;cursor:pointer;text-align:center;
+  }
+  .month-btn.active{background:var(--brass);color:#fff;border-color:var(--brass);}
+
+  /* ---------- Stock detail header ---------- */
+  .stock-header{
+    background:var(--glass);
+    backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+    border:1px solid var(--glass-border);
+    box-shadow:var(--shadow);
+    border-radius:var(--radius);
+    padding:18px;margin-bottom:16px;
+  }
+  .stock-header-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;}
+  .stock-header h2{font-family:var(--font-serif);font-size:20px;margin:0 0 2px;}
+  .stock-header .stock-symbol-big{font-size:12px;color:var(--ink-faint);}
+  .header-actions{display:flex;gap:6px;}
+  .stock-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:14px;}
+  @media (min-width:480px){.stock-stats{grid-template-columns:repeat(3,1fr);}}
+  .stat-box .stat-label{font-size:11px;color:var(--ink-faint);margin-bottom:2px;}
+  .stat-box .stat-value{font-family:var(--font-serif);font-size:16px;font-weight:700;font-variant-numeric:tabular-nums;}
+  .stat-box .stat-value.pos{color:var(--green);}
+  .stat-box .stat-value.neg{color:var(--red);}
+  .stat-box-editable{
+    background:none;border:none;padding:0;margin:0;
+    text-align:left;cursor:pointer;font-family:var(--font-sans);
+  }
+  .stat-box-editable .stat-value{text-decoration:underline dotted;text-underline-offset:3px;}
+  .stat-box-editable:hover .stat-value{color:var(--navy);}
+
+  .icon-btn{
+    background:var(--glass-input);
+    backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+    border:1px solid var(--glass-border);
+    border-radius:var(--radius-sm);
+    color:var(--ink-soft);
+    padding:6px 10px;font-size:12.5px;cursor:pointer;
+    font-family:var(--font-sans);
+  }
+  .icon-btn:hover{border-color:var(--ink-soft);}
+  .icon-btn.danger:hover{color:var(--red);border-color:var(--red);}
+
+  /* ---------- Ledger table ---------- */
+  .ledger-wrap{overflow-x:auto; scrollbar-width:none; -ms-overflow-style:none;}
+  table.ledger{width:100%;border-collapse:collapse;font-size:13.5px;min-width:480px;}
+  table.ledger th{
+    text-align:left;font-size:11px;color:var(--ink-faint);font-weight:600;
+    padding:6px 8px;border-bottom:1px solid var(--hairline);white-space:nowrap;
+  }
+  table.ledger td{padding:9px 8px;border-bottom:1px solid var(--hairline);vertical-align:top;}
+  table.ledger tr:last-child td{border-bottom:none;}
+  .num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .num.out{color:var(--red);}
+  .num.in{color:var(--green);}
+  .memo-main{font-weight:600;}
+  .memo-sub{font-size:11.5px;color:var(--ink-faint);margin-top:1px;}
+  .type-tag{font-size:12px;color:var(--ink-soft);white-space:nowrap;}
+  .row-del{background:none;border:none;color:var(--ink-faint);cursor:pointer;font-size:12px;padding:2px 4px;}
+  .row-del:hover{color:var(--red);}
+
+  /* ---------- FAB ---------- */
+  .fab{
+    position:fixed;right:20px;bottom:20px;width:56px;height:56px;border-radius:50%;
+    background:linear-gradient(135deg, var(--navy), #6D93E8);
+    color:#FFFFFF;border:1px solid rgba(255,255,255,.5);font-size:26px;
+    box-shadow:0 10px 26px rgba(62,111,217,.45);cursor:pointer;z-index:20;
+  }
+  .fab:focus-visible{outline:3px solid var(--navy);outline-offset:2px;}
+
+  /* ---------- Modal ---------- */
+  .overlay{
+    position:fixed;inset:0;background:rgba(20,26,38,.35);
+    backdrop-filter:blur(2px); -webkit-backdrop-filter:blur(2px);
+    display:none;align-items:flex-end;justify-content:center;z-index:30;
+  }
+  .overlay.open{display:flex;}
+  @media (min-width:600px){.overlay{align-items:center;}}
+  .modal{
+    background:var(--glass-strong);
+    backdrop-filter:blur(26px); -webkit-backdrop-filter:blur(26px);
+    border:1px solid var(--glass-border);box-shadow:var(--shadow);
+    width:100%;max-width:440px;box-sizing:border-box;
+    border-radius:var(--radius) var(--radius) 0 0;
+    padding:20px;max-height:88vh;overflow-y:auto;overflow-x:hidden;
+    scrollbar-width:none;-ms-overflow-style:none;
+  }
+  @media (min-width:600px){.modal{border-radius:var(--radius);}}
+  .modal h3{font-family:var(--font-serif);font-size:17px;margin:0 0 14px;}
+  .seg-grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:6px;
+    margin-bottom:6px;
+  }
+  .seg-grid button{
+    padding:9px 6px;border:1px solid var(--glass-border);
+    border-radius:var(--radius-sm);
+    background:var(--glass-input);color:var(--ink-soft);
+    font-family:var(--font-sans);font-size:13px;font-weight:600;cursor:pointer;
+  }
+  .seg-grid button.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+  label{display:block;font-size:12px;color:var(--ink-soft);margin:12px 0 5px;}
+  input[type=text],input[type=number],input[type=date],select{
+    width:100%;max-width:100%;min-width:0;
+    padding:9px 10px;border:1px solid var(--glass-border);
+    border-radius:var(--radius-sm);background:var(--glass-input);
+    color:var(--ink);font-family:var(--font-sans);font-size:16px;box-sizing:border-box;
+  }
+  input[type=date]{-webkit-appearance:none;appearance:none;}
+  input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--navy);outline-offset:1px;}
+  .sum-note{font-size:11px;color:var(--ink-faint);margin:4px 0 0;}
+  .field-error{color:var(--red);font-size:12px;margin-top:6px;display:none;}
+  .modal-actions{display:flex;gap:8px;margin-top:18px;}
+  .btn{
+    flex:1;padding:11px;border-radius:var(--radius-sm);
+    font-family:var(--font-sans);font-size:14px;font-weight:600;cursor:pointer;
+    border:1px solid var(--glass-border);background:var(--glass-input);color:var(--ink-soft);
+  }
+  .btn.primary{background:var(--ink);color:#fff;border-color:var(--ink);}
+  .btn.danger{color:var(--red);border-color:var(--red);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="masthead-inner">
+      <div class="brand">
+        <span class="brand-mark">📈</span>
+        <div>
+          <h1>投資紀錄</h1>
+          <p class="tagline">股票庫存、配股與配息追蹤</p>
+        </div>
+      </div>
+      <div class="networth">
+        <span class="networth-label">總投入成本</span>
+        <span class="networth-value" id="totalCostValue">NT$ 0</span>
+      </div>
+    </div>
+  </header>
+
+  <nav class="site-links">
+    <a href="index.html" class="site-link">🧾 記帳本</a>
+    <a href="goals.html" class="site-link">🎯 存錢目標</a>
+    <a href="investing.html" class="site-link active">📈 投資紀錄</a>
+  </nav>
+
+  <nav class="tabs" id="tabs"></nav>
+
+  <main id="mainView"></main>
+
+</div>
+
+<button class="fab" id="fabAdd" title="新增紀錄" aria-label="新增紀錄">＋</button>
+
+<!-- Stock modal -->
+<div class="overlay" id="stockOverlay">
+  <div class="modal">
+    <h3 id="stockModalTitle">新增股票</h3>
+    <label for="stockSymbol">代號</label>
+    <input type="text" id="stockSymbol" placeholder="例如：2330">
+    <label for="stockName">名稱</label>
+    <input type="text" id="stockName" placeholder="例如：台積電">
+
+    <div id="stockInitialBlock">
+      <label for="stockInitialShares" id="stockInitialSharesLabel">持有股數</label>
+      <input type="number" id="stockInitialShares" inputmode="numeric" min="0" step="1" placeholder="0">
+      <label for="stockInitialCost" id="stockInitialCostLabel">成交均價</label>
+      <input type="number" id="stockInitialCost" inputmode="decimal" min="0" step="0.01" placeholder="0">
+      <p class="sum-note" id="stockCostHint"></p>
+    </div>
+
+    <label>除息月份（可複選，提醒哪些月份通常會除息）</label>
+    <div class="month-grid" id="stockMonthGrid"></div>
+    <p class="field-error" id="stockError">請輸入代號與名稱。</p>
+    <div class="modal-actions">
+      <button class="btn" id="stockCancel">取消</button>
+      <button class="btn danger" id="stockDelete" style="display:none;">刪除</button>
+      <button class="btn primary" id="stockSubmit">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Cost override modal -->
+<div class="overlay" id="costOverlay">
+  <div class="modal">
+    <h3>編輯總成本</h3>
+    <p class="sum-note">預設會依照買賣紀錄自動計算，這裡可以手動覆蓋成你要的金額。</p>
+    <label for="costInput">總成本</label>
+    <input type="number" id="costInput" inputmode="numeric" min="0" step="1" placeholder="0">
+    <div class="modal-actions">
+      <button class="btn" id="costCancel">取消</button>
+      <button class="btn" id="costReset">恢復自動計算</button>
+      <button class="btn primary" id="costSubmit">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Transaction modal -->
+<div class="overlay" id="txOverlay">
+  <div class="modal">
+    <h3 id="txModalTitle">新增紀錄</h3>
+
+    <div class="seg-grid" id="txTypeSeg">
+      <button type="button" data-type="buy" class="active">買進</button>
+      <button type="button" data-type="sell">賣出</button>
+      <button type="button" data-type="cash_dividend">現金股利（配息）</button>
+      <button type="button" data-type="stock_dividend">股票股利（配股）</button>
+    </div>
+
+    <div id="txStockBlock">
+      <label for="txStock">股票</label>
+      <select id="txStock"></select>
+    </div>
+
+    <label for="txDate" id="txDateLabel">日期</label>
+    <input type="date" id="txDate">
+
+    <div id="txSharesBlock">
+      <label for="txShares" id="txSharesLabel">股數</label>
+      <input type="number" id="txShares" inputmode="numeric" min="0" step="1" placeholder="0">
+    </div>
+
+    <div id="txPriceBlock">
+      <label for="txPrice">每股價格</label>
+      <input type="number" id="txPrice" inputmode="decimal" min="0" step="0.01" placeholder="0">
+      <p class="sum-note" id="txTotalHint"></p>
+    </div>
+
+    <div id="txAmountBlock" style="display:none;">
+      <label for="txDividendPerShare">每股股利</label>
+      <input type="number" id="txDividendPerShare" inputmode="decimal" min="0" step="0.01" placeholder="0">
+      <p class="sum-note" id="txDividendHint"></p>
+    </div>
+
+    <label for="txNote">備註（選填）</label>
+    <input type="text" id="txNote" placeholder="備註">
+
+    <p class="field-error" id="txError">請確認欄位皆已正確填寫。</p>
+
+    <div class="modal-actions">
+      <button class="btn" id="txCancel">取消</button>
+      <button class="btn primary" id="txSubmit">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settlement account modal -->
+<div class="overlay" id="settlementOverlay">
+  <div class="modal">
+    <h3 id="settlementModalTitle">設定交割戶頭餘額</h3>
+    <p class="sum-note">交割戶頭是股票買賣資金進出的帳戶。輸入目前餘額後，之後每一筆買進、賣出、現金股利都會自動更新這個金額。</p>
+    <label for="settlementInput">目前餘額</label>
+    <input type="number" id="settlementInput" inputmode="numeric" min="0" step="1" placeholder="0">
+    <p class="field-error" id="settlementError">請輸入餘額（可以是 0）。</p>
+    <div class="modal-actions">
+      <button class="btn" id="settlementCancel" style="display:none;">取消</button>
+      <button class="btn primary" id="settlementSubmit">開始使用</button>
+    </div>
+  </div>
+</div>
+
+<!-- Initial holdings prompt -->
+<div class="overlay" id="holdingsPromptOverlay">
+  <div class="modal">
+    <h3>你目前已經持有股票嗎？</h3>
+    <p class="sum-note">如果已經有庫存，可以直接新增，之後配股配息、交割戶餘額都會依照持股正確計算。</p>
+    <div class="modal-actions">
+      <button class="btn" id="holdingsNoBtn">還沒有，稍後再新增</button>
+      <button class="btn primary" id="holdingsYesBtn">有，新增庫存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm modal -->
+<div class="overlay" id="confirmOverlay">
+  <div class="modal">
+    <h3 id="confirmTitle">確定要刪除嗎？</h3>
+    <p class="sum-note" id="confirmMessage"></p>
+    <div class="modal-actions">
+      <button class="btn" id="confirmCancel">取消</button>
+      <button class="btn danger" id="confirmOk">刪除</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var STORAGE_KEY = "investing-app-v1";
+
+  var state = loadState();
+  var activeTab = "overview";
+  var editingStockId = null;
+  var txType = "buy";
+
+  function loadState(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(raw){
+        var parsed = JSON.parse(raw);
+        if(parsed && Array.isArray(parsed.stocks) && Array.isArray(parsed.txs)){
+          var migrated = false;
+          parsed.txs.forEach(function(t){
+            if(t.type === "buy" && !t.fromStockSetup &&
+               (t.note === "期初庫存" || t.note === "手動調整股數")){
+              t.fromStockSetup = true;
+              migrated = true;
+            }
+            if(t.type === "buy" && t.note === "期初庫存" && t.date !== "1900-01-01"){
+              t.date = "1900-01-01";
+              migrated = true;
+            }
+          });
+          if(migrated){
+            try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed)); }catch(e){ /* best effort */ }
+          }
+          return parsed;
+        }
+      }
+    }catch(e){ /* fall through */ }
+    return { stocks: [], txs: [] };
+  }
+  function saveState(){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+    catch(e){ /* best effort */ }
+  }
+
+  function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+  function todayStr(){ return new Date().toISOString().slice(0,10); }
+  function fmt(n){
+    var v = Math.round(n || 0);
+    return (v<0?"-":"") + "NT$ " + Math.abs(v).toLocaleString("zh-Hant-TW");
+  }
+  function fmtPct(n){
+    var v = n || 0;
+    return (v>=0?"+":"") + v.toFixed(1) + "%";
+  }
+  function escapeHtml(s){
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+  function byDateAsc(a,b){ return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; }
+  function byDateDesc(a,b){ return a.date < b.date ? 1 : a.date > b.date ? -1 : 0; }
+
+  function dateToStr(d){
+    var y = d.getFullYear();
+    var m = String(d.getMonth()+1).padStart(2,"0");
+    var day = String(d.getDate()).padStart(2,"0");
+    return y + "-" + m + "-" + day;
+  }
+  function addOneMonth(dateStr){
+    var d = new Date(dateStr + "T00:00:00");
+    d.setMonth(d.getMonth() + 1);
+    return dateToStr(d);
+  }
+  function sharesAsOfDate(stockId, dateStr){
+    var shares = 0;
+    state.txs.filter(function(t){ return t.stockId === stockId && t.date <= dateStr; })
+      .sort(byDateAsc)
+      .forEach(function(t){
+        if(t.type === "buy") shares += t.shares;
+        else if(t.type === "sell") shares -= t.shares;
+        else if(t.type === "stock_dividend") shares += t.shares;
+      });
+    return shares;
+  }
+
+  var confirmOverlay = document.getElementById("confirmOverlay");
+  var confirmCallback = null;
+  function showConfirm(message, onConfirm){
+    document.getElementById("confirmMessage").textContent = message;
+    confirmCallback = onConfirm;
+    confirmOverlay.classList.add("open");
+  }
+  document.getElementById("confirmCancel").addEventListener("click", function(){
+    confirmOverlay.classList.remove("open");
+    confirmCallback = null;
+  });
+  document.getElementById("confirmOk").addEventListener("click", function(){
+    confirmOverlay.classList.remove("open");
+    var cb = confirmCallback;
+    confirmCallback = null;
+    if(cb) cb();
+  });
+
+  function getStock(id){ return state.stocks.filter(function(s){ return s.id === id; })[0]; }
+
+  function stockPosition(stockId){
+    var shares = 0, cost = 0, realized = 0, cashDividends = 0;
+    var txs = state.txs.filter(function(t){ return t.stockId === stockId; }).sort(byDateAsc);
+    txs.forEach(function(t){
+      if(t.type === "buy"){
+        shares += t.shares;
+        cost += t.shares * t.price;
+      } else if(t.type === "sell"){
+        var avgCost = shares > 0 ? cost / shares : 0;
+        realized += t.shares * (t.price - avgCost);
+        cost -= t.shares * avgCost;
+        shares -= t.shares;
+      } else if(t.type === "stock_dividend"){
+        shares += t.shares;
+      } else if(t.type === "cash_dividend"){
+        cashDividends += t.amount;
+      }
+    });
+    if(shares <= 0.0001){ shares = Math.max(0, shares); cost = Math.max(0, cost); }
+    return {
+      shares: shares, cost: cost,
+      avgCost: shares > 0 ? cost / shares : 0,
+      realized: realized, cashDividends: cashDividends
+    };
+  }
+
+  function stockDisplayCost(stock, pos){
+    return (stock.costOverride !== undefined && stock.costOverride !== null) ? stock.costOverride : pos.cost;
+  }
+
+  function totals(){
+    var totalCost = 0, totalDividends = 0;
+    state.stocks.forEach(function(s){
+      var pos = stockPosition(s.id);
+      totalCost += stockDisplayCost(s, pos);
+      totalDividends += pos.cashDividends;
+    });
+    return { cost: totalCost, dividends: totalDividends };
+  }
+
+  function settlementBalance(){
+    var bal = state.settlementInitial || 0;
+    var today = todayStr();
+    state.txs.forEach(function(t){
+      if(t.fromStockSetup) return;
+      if(t.type === "buy") bal -= t.shares * t.price;
+      else if(t.type === "sell") bal += t.shares * t.price;
+      else if(t.type === "cash_dividend"){
+        if(!t.payDate || t.payDate <= today) bal += t.amount;
+      }
+    });
+    return bal;
+  }
+
+  // ---------- Rendering ----------
+
+  function render(){
+    var t = totals();
+    document.getElementById("totalCostValue").textContent = fmt(t.cost);
+    renderTabs();
+    if(activeTab === "overview") renderOverview();
+    else renderStockView(activeTab);
+  }
+
+  function renderTabs(){
+    var tabs = document.getElementById("tabs");
+    tabs.innerHTML = "";
+    tabs.appendChild(makeTabBtn("overview", "總覽"));
+    var addBtn = document.createElement("button");
+    addBtn.className = "tab-btn add-tab";
+    addBtn.textContent = "＋ 新增股票";
+    addBtn.addEventListener("click", function(){ openStockModal(null); });
+    tabs.appendChild(addBtn);
+  }
+  function makeTabBtn(id, label){
+    var btn = document.createElement("button");
+    btn.className = "tab-btn" + (activeTab === id ? " active" : "");
+    btn.textContent = label;
+    btn.addEventListener("click", function(){ activeTab = id; render(); });
+    return btn;
+  }
+
+  function renderOverview(){
+    var main = document.getElementById("mainView");
+    var t = totals();
+    var thisMonth = todayStr().slice(0, 7);
+
+    var html = "";
+    html += '<div class="summary-row">';
+    html += '<div class="card summary-card"><div class="sum-label">總投入成本</div><div class="sum-value">' + fmt(t.cost) + '</div></div>';
+    html += '<div class="card summary-card"><div class="sum-label">累積配息</div><div class="sum-value pos">' + fmt(t.dividends) + '</div></div>';
+    html += '<div class="card summary-card">' +
+      '<div class="sum-label">交割戶頭餘額</div>' +
+      '<div class="sum-value">' + fmt(settlementBalance()) + '</div>' +
+      '<button class="icon-btn" id="editSettlementBtn" style="margin-top:8px;">編輯餘額</button>' +
+    '</div>';
+    html += '</div>';
+
+    html += '<h2 class="section-title">持股</h2>';
+    if(state.stocks.length === 0){
+      html += '<div class="card empty-state">還沒有追蹤任何股票，點右下角「＋」或上方「＋ 新增股票」開始。</div>';
+    } else {
+      var curMonthNum = parseInt(thisMonth.slice(5,7), 10);
+      html += '<div class="grid-stocks">';
+      state.stocks.forEach(function(s){
+        var pos = stockPosition(s.id);
+        var thisMonthDivs = stockDividendsInMonth(s.id, thisMonth);
+        var scheduled = (s.dividendMonths || []).indexOf(curMonthNum) !== -1;
+        var highlight = thisMonthDivs.length > 0 || scheduled;
+        var badgeHtml = "";
+        if(thisMonthDivs.length > 0){
+          badgeHtml = '<span class="div-badge">' + exDivBadgeLabel(thisMonthDivs) + '</span>';
+        } else if(scheduled){
+          badgeHtml = '<span class="div-badge scheduled">預計本月除息</span>';
+        }
+        html += '<button class="stock-card' + (highlight ? " highlight" : "") + '" data-goto="' + s.id + '">' +
+          badgeHtml +
+          '<span class="stock-symbol">' + escapeHtml(s.symbol) + '</span>' +
+          '<span class="stock-name">' + escapeHtml(s.name) + '</span>' +
+          '<span class="stock-shares">' + pos.shares.toLocaleString("zh-Hant-TW") + ' 股</span>' +
+          '<span class="stock-cost">成本 ' + fmt(stockDisplayCost(s, pos)) + '</span>' +
+        '</button>';
+      });
+      html += '</div>';
+    }
+
+    main.innerHTML = html;
+    main.querySelectorAll("[data-goto]").forEach(function(el){
+      el.addEventListener("click", function(){ activeTab = el.getAttribute("data-goto"); render(); });
+    });
+    var editSettlementBtn = document.getElementById("editSettlementBtn");
+    if(editSettlementBtn) editSettlementBtn.addEventListener("click", function(){ openSettlementModal(false); });
+  }
+
+  function stockDividendsInMonth(stockId, yearMonth){
+    return state.txs.filter(function(t){
+      return t.stockId === stockId &&
+        (t.type === "cash_dividend" || t.type === "stock_dividend") &&
+        t.date.slice(0,7) === yearMonth;
+    });
+  }
+
+  function exDivBadgeLabel(divs){
+    var hasCash = divs.some(function(t){ return t.type === "cash_dividend"; });
+    var hasStock = divs.some(function(t){ return t.type === "stock_dividend"; });
+    if(hasCash && hasStock) return "本月除權息";
+    if(hasStock) return "本月除權";
+    return "本月除息";
+  }
+
+  function renderStockView(id){
+    var s = getStock(id);
+    if(!s){ activeTab = "overview"; return renderOverview(); }
+    var pos = stockPosition(id);
+    var displayCost = stockDisplayCost(s, pos);
+    var isOverridden = s.costOverride !== undefined && s.costOverride !== null;
+
+    var main = document.getElementById("mainView");
+    var html = '<div class="stock-header">' +
+      '<div class="stock-header-top">' +
+        '<div><h2>' + escapeHtml(s.name) + '</h2><span class="stock-symbol-big">' + escapeHtml(s.symbol) + '</span></div>' +
+        '<div class="header-actions">' +
+          '<button class="icon-btn" id="editStockBtn">編輯</button>' +
+          '<button class="icon-btn danger" id="delStockBtn">刪除</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="stock-stats">' +
+        '<div class="stat-box"><div class="stat-label">股數</div><div class="stat-value">' + pos.shares.toLocaleString("zh-Hant-TW") + '</div></div>' +
+        '<div class="stat-box"><div class="stat-label">成交均價</div><div class="stat-value">' + (pos.avgCost ? pos.avgCost.toFixed(2) : "—") + '</div></div>' +
+        '<button type="button" class="stat-box stat-box-editable" id="costStatBtn" title="點擊編輯總成本">' +
+          '<div class="stat-label">總成本' + (isOverridden ? '　✎ 手動' : '') + '</div>' +
+          '<div class="stat-value">' + fmt(displayCost) + '</div>' +
+        '</button>' +
+      '</div>' +
+      (pos.cashDividends > 0 ? '<p class="sum-note" style="margin-top:10px;">累積配息 ' + fmt(pos.cashDividends) + (pos.realized ? '　·　已實現損益 ' + fmt(pos.realized) : '') + '</p>' : (pos.realized ? '<p class="sum-note" style="margin-top:10px;">已實現損益 ' + fmt(pos.realized) + '</p>' : '')) +
+    '</div>';
+
+    var txs = state.txs.filter(function(t){ return t.stockId === id; }).sort(byDateDesc);
+    html += '<div class="card ledger-wrap">';
+    if(txs.length === 0){
+      html += '<div class="empty-state">這檔股票還沒有任何紀錄。</div>';
+    } else {
+      html += '<table class="ledger"><thead><tr><th>日期</th><th>類型</th><th class="num">股數</th><th class="num">價格/金額</th><th>備註</th><th></th></tr></thead><tbody>';
+      txs.forEach(function(t){ html += renderTxRow(t); });
+      html += '</tbody></table>';
+    }
+    html += '</div>';
+
+    main.innerHTML = html;
+    document.getElementById("editStockBtn").addEventListener("click", function(){ openStockModal(s.id); });
+    document.getElementById("delStockBtn").addEventListener("click", function(){ deleteStock(s.id); });
+    document.getElementById("costStatBtn").addEventListener("click", function(){ openCostModal(s.id); });
+    bindRowDeletes(main);
+  }
+
+  function typeLabel(type){
+    return type === "buy" ? "買進" : type === "sell" ? "賣出" :
+      type === "cash_dividend" ? "現金股利" : type === "stock_dividend" ? "股票股利" : type;
+  }
+
+  function renderTxRow(t){
+    var sharesCell = "", priceCell = "", noteText = t.note || "";
+    if(t.type === "buy" || t.type === "sell"){
+      sharesCell = t.shares.toLocaleString("zh-Hant-TW");
+      priceCell = t.price;
+    } else if(t.type === "stock_dividend"){
+      sharesCell = "+" + t.shares.toLocaleString("zh-Hant-TW");
+    } else if(t.type === "cash_dividend"){
+      priceCell = Math.round(t.amount).toLocaleString("zh-Hant-TW");
+      if(t.perShare){
+        var today = todayStr();
+        var payInfo = t.payDate ? ((t.payDate <= today) ? "已入帳交割戶頭" : "預計 " + t.payDate + " 入帳") : "";
+        noteText = ["每股 " + t.perShare, payInfo, t.note].filter(Boolean).join("　");
+      }
+    }
+    var numClass = (t.type === "sell") ? "out" : (t.type === "buy" ? "" : "in");
+    return '<tr>' +
+      '<td>' + (t.date === "1900-01-01" ? "期初" : t.date.slice(5).replace("-", "/")) + '</td>' +
+      '<td class="type-tag">' + typeLabel(t.type) + '</td>' +
+      '<td class="num">' + sharesCell + '</td>' +
+      '<td class="num ' + numClass + '">' + priceCell + '</td>' +
+      '<td class="memo-sub">' + escapeHtml(noteText) + '</td>' +
+      '<td><button class="row-del" data-delid="' + t.id + '" title="刪除">✕</button></td>' +
+    '</tr>';
+  }
+
+  function bindRowDeletes(scope){
+    scope.querySelectorAll("[data-delid]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var id = btn.getAttribute("data-delid");
+        showConfirm("確定要刪除這筆紀錄嗎？", function(){
+          state.txs = state.txs.filter(function(t){ return t.id !== id; });
+          saveState();
+          render();
+        });
+      });
+    });
+  }
+
+  // ---------- Stock modal ----------
+
+  var stockOverlay = document.getElementById("stockOverlay");
+  var stockMonthSelection = [];
+
+  function renderMonthGrid(){
+    var wrap = document.getElementById("stockMonthGrid");
+    wrap.innerHTML = "";
+    for(var m = 1; m <= 12; m++){
+      (function(month){
+        var btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "month-btn" + (stockMonthSelection.indexOf(month) !== -1 ? " active" : "");
+        btn.textContent = month + "月";
+        btn.addEventListener("click", function(){
+          var idx = stockMonthSelection.indexOf(month);
+          if(idx === -1) stockMonthSelection.push(month); else stockMonthSelection.splice(idx, 1);
+          btn.classList.toggle("active");
+        });
+        wrap.appendChild(btn);
+      })(m);
+    }
+  }
+
+  function openStockModal(id){
+    editingStockId = id;
+    var isEdit = !!id;
+    document.getElementById("stockModalTitle").textContent = isEdit ? "編輯股票" : "新增股票";
+    document.getElementById("stockError").style.display = "none";
+    document.getElementById("stockDelete").style.display = isEdit ? "block" : "none";
+    document.getElementById("stockInitialSharesLabel").textContent = isEdit ? "新增股數（選填，會建立一筆買進紀錄）" : "持有股數";
+    document.getElementById("stockInitialCostLabel").textContent = isEdit ? "成交均價（選填）" : "成交均價";
+    document.getElementById("stockInitialShares").value = "";
+    document.getElementById("stockInitialCost").value = "";
+    document.getElementById("stockCostHint").textContent = "";
+    if(isEdit){
+      var s = getStock(id);
+      document.getElementById("stockSymbol").value = s.symbol;
+      document.getElementById("stockName").value = s.name;
+      stockMonthSelection = (s.dividendMonths || []).slice();
+    } else {
+      document.getElementById("stockSymbol").value = "";
+      document.getElementById("stockName").value = "";
+      stockMonthSelection = [];
+    }
+    renderMonthGrid();
+    stockOverlay.classList.add("open");
+  }
+  function closeStockModal(){ stockOverlay.classList.remove("open"); }
+
+  function updateStockCostHint(){
+    var shares = parseFloat(document.getElementById("stockInitialShares").value) || 0;
+    var price = parseFloat(document.getElementById("stockInitialCost").value) || 0;
+    var hint = document.getElementById("stockCostHint");
+    hint.textContent = (shares && price) ? "成本：" + fmt(shares * price) : "";
+  }
+  document.getElementById("stockInitialShares").addEventListener("input", updateStockCostHint);
+  document.getElementById("stockInitialCost").addEventListener("input", updateStockCostHint);
+
+  document.getElementById("stockCancel").addEventListener("click", closeStockModal);
+  stockOverlay.addEventListener("click", function(e){ if(e.target === stockOverlay) closeStockModal(); });
+
+  document.getElementById("stockSubmit").addEventListener("click", function(){
+    var symbol = document.getElementById("stockSymbol").value.trim();
+    var name = document.getElementById("stockName").value.trim();
+    var months = stockMonthSelection.slice();
+    var err = document.getElementById("stockError");
+    if(!symbol || !name){ err.textContent = "請輸入代號與名稱。"; err.style.display = "block"; return; }
+
+    var addShares = parseFloat(document.getElementById("stockInitialShares").value) || 0;
+    var addCost = parseFloat(document.getElementById("stockInitialCost").value) || 0;
+
+    if(!editingStockId){
+      if(addShares <= 0 || addCost <= 0){
+        err.textContent = "請輸入持有股數與成交均價。";
+        err.style.display = "block";
+        return;
+      }
+    }
+
+    var targetStockId;
+    var addNote;
+    var addDate;
+    if(editingStockId){
+      var s = getStock(editingStockId);
+      s.symbol = symbol; s.name = name; s.dividendMonths = months;
+      targetStockId = editingStockId;
+      addNote = "手動調整股數";
+      addDate = todayStr();
+    } else {
+      targetStockId = uid();
+      state.stocks.push({ id: targetStockId, symbol: symbol, name: name, dividendMonths: months });
+      addNote = "期初庫存";
+      addDate = "1900-01-01";
+    }
+    if(addShares > 0){
+      state.txs.push({
+        id: uid(), stockId: targetStockId, type: "buy", date: addDate,
+        shares: addShares, price: addCost, note: addNote,
+        fromStockSetup: true
+      });
+    }
+    saveState();
+    closeStockModal();
+    render();
+  });
+
+  document.getElementById("stockDelete").addEventListener("click", function(){
+    if(!editingStockId) return;
+    var idToDelete = editingStockId;
+    showConfirm("確定要刪除這檔股票嗎？相關的買賣與配股配息紀錄也會一併移除。", function(){
+      state.stocks = state.stocks.filter(function(s){ return s.id !== idToDelete; });
+      state.txs = state.txs.filter(function(t){ return t.stockId !== idToDelete; });
+      saveState();
+      closeStockModal();
+      activeTab = "overview";
+      render();
+    });
+  });
+
+  function deleteStock(id){
+    showConfirm("確定要刪除這檔股票嗎？相關的買賣與配股配息紀錄也會一併移除。", function(){
+      state.stocks = state.stocks.filter(function(s){ return s.id !== id; });
+      state.txs = state.txs.filter(function(t){ return t.stockId !== id; });
+      saveState();
+      activeTab = "overview";
+      render();
+    });
+  }
+
+  // ---------- Cost override modal ----------
+
+  var costOverlay = document.getElementById("costOverlay");
+  var editingCostStockId = null;
+
+  function openCostModal(stockId){
+    editingCostStockId = stockId;
+    var s = getStock(stockId);
+    var pos = stockPosition(stockId);
+    document.getElementById("costInput").value = stockDisplayCost(s, pos);
+    costOverlay.classList.add("open");
+  }
+  function closeCostModal(){ costOverlay.classList.remove("open"); }
+
+  document.getElementById("costCancel").addEventListener("click", closeCostModal);
+  costOverlay.addEventListener("click", function(e){ if(e.target === costOverlay) closeCostModal(); });
+
+  document.getElementById("costSubmit").addEventListener("click", function(){
+    var num = parseFloat(document.getElementById("costInput").value);
+    if(isNaN(num) || num < 0) return;
+    var s = getStock(editingCostStockId);
+    if(s){ s.costOverride = num; saveState(); }
+    closeCostModal();
+    render();
+  });
+
+  document.getElementById("costReset").addEventListener("click", function(){
+    var s = getStock(editingCostStockId);
+    if(s){ delete s.costOverride; saveState(); }
+    closeCostModal();
+    render();
+  });
+
+  // ---------- Transaction modal ----------
+
+  var txOverlay = document.getElementById("txOverlay");
+
+  function openTxModal(){
+    txType = "buy";
+    Array.prototype.forEach.call(document.getElementById("txTypeSeg").children, function(b){
+      b.classList.toggle("active", b.getAttribute("data-type") === "buy");
+    });
+    document.getElementById("txDate").value = todayStr();
+    document.getElementById("txShares").value = "";
+    document.getElementById("txPrice").value = "";
+    document.getElementById("txDividendPerShare").value = "";
+    document.getElementById("txNote").value = "";
+    document.getElementById("txError").style.display = "none";
+    populateStockSelect();
+    if(activeTab !== "overview") document.getElementById("txStock").value = activeTab;
+    updateTxTypeUI();
+    txOverlay.classList.add("open");
+  }
+  function closeTxModal(){ txOverlay.classList.remove("open"); }
+
+  function populateStockSelect(){
+    var sel = document.getElementById("txStock");
+    if(state.stocks.length === 0){
+      sel.innerHTML = '<option value="">請先新增股票</option>';
+      return;
+    }
+    sel.innerHTML = state.stocks.map(function(s){
+      return '<option value="' + s.id + '">' + escapeHtml(s.symbol) + ' ' + escapeHtml(s.name) + '</option>';
+    }).join("");
+  }
+
+  document.getElementById("txTypeSeg").addEventListener("click", function(e){
+    var btn = e.target.closest("button[data-type]");
+    if(!btn) return;
+    txType = btn.getAttribute("data-type");
+    Array.prototype.forEach.call(document.getElementById("txTypeSeg").children, function(b){
+      b.classList.toggle("active", b === btn);
+    });
+    updateTxTypeUI();
+  });
+
+  function updateTxTypeUI(){
+    var showShares = txType === "buy" || txType === "sell" || txType === "stock_dividend";
+    var showPrice = txType === "buy" || txType === "sell";
+    var showAmount = txType === "cash_dividend";
+    document.getElementById("txSharesBlock").style.display = showShares ? "block" : "none";
+    document.getElementById("txPriceBlock").style.display = showPrice ? "block" : "none";
+    document.getElementById("txAmountBlock").style.display = showAmount ? "block" : "none";
+    document.getElementById("txSharesLabel").textContent = txType === "stock_dividend" ? "配股股數" : "股數";
+    document.getElementById("txDateLabel").textContent = txType === "cash_dividend" ? "除息日" : "日期";
+    updateTotalHint();
+    updateDividendHint();
+  }
+
+  function updateTotalHint(){
+    var hint = document.getElementById("txTotalHint");
+    if(txType !== "buy" && txType !== "sell"){ hint.textContent = ""; return; }
+    var shares = parseFloat(document.getElementById("txShares").value) || 0;
+    var price = parseFloat(document.getElementById("txPrice").value) || 0;
+    hint.textContent = shares && price ? "總金額約 " + fmt(shares * price) : "";
+  }
+  document.getElementById("txShares").addEventListener("input", updateTotalHint);
+  document.getElementById("txPrice").addEventListener("input", updateTotalHint);
+
+  function updateDividendHint(){
+    var hint = document.getElementById("txDividendHint");
+    if(txType !== "cash_dividend"){ hint.textContent = ""; return; }
+    var stockId = document.getElementById("txStock").value;
+    var date = document.getElementById("txDate").value;
+    var perShare = parseFloat(document.getElementById("txDividendPerShare").value) || 0;
+    if(!stockId || !date || !perShare){ hint.textContent = ""; return; }
+    var shares = sharesAsOfDate(stockId, date);
+    var total = shares * perShare;
+    var payDate = addOneMonth(date);
+    hint.textContent = "持有 " + shares.toLocaleString("zh-Hant-TW") + " 股，共 " + fmt(total) + "，預計 " + payDate + " 入帳交割戶頭";
+  }
+  document.getElementById("txDividendPerShare").addEventListener("input", updateDividendHint);
+  document.getElementById("txDate").addEventListener("change", updateDividendHint);
+  document.getElementById("txStock").addEventListener("change", updateDividendHint);
+
+  document.getElementById("fabAdd").addEventListener("click", function(){
+    if(state.stocks.length === 0){ openStockModal(null); return; }
+    openTxModal();
+  });
+  document.getElementById("txCancel").addEventListener("click", closeTxModal);
+  txOverlay.addEventListener("click", function(e){ if(e.target === txOverlay) closeTxModal(); });
+
+  document.getElementById("txSubmit").addEventListener("click", function(){
+    var stockId = document.getElementById("txStock").value;
+    var date = document.getElementById("txDate").value || todayStr();
+    var note = document.getElementById("txNote").value.trim();
+    var err = document.getElementById("txError");
+
+    if(!stockId){ err.textContent = "請先新增並選擇一檔股票。"; err.style.display = "block"; return; }
+
+    var payload = { id: uid(), stockId: stockId, type: txType, date: date, note: note };
+
+    if(txType === "buy" || txType === "sell"){
+      var shares = parseFloat(document.getElementById("txShares").value);
+      var price = parseFloat(document.getElementById("txPrice").value);
+      if(!shares || shares <= 0 || !price || price <= 0){
+        err.textContent = "請輸入大於 0 的股數與價格。"; err.style.display = "block"; return;
+      }
+      if(txType === "sell"){
+        var pos = stockPosition(stockId);
+        if(shares > pos.shares + 0.0001){
+          err.textContent = "賣出股數不能超過目前持有的 " + pos.shares.toLocaleString("zh-Hant-TW") + " 股。";
+          err.style.display = "block";
+          return;
+        }
+      }
+      payload.shares = shares; payload.price = price;
+    } else if(txType === "stock_dividend"){
+      var divShares = parseFloat(document.getElementById("txShares").value);
+      if(!divShares || divShares <= 0){
+        err.textContent = "請輸入大於 0 的配股股數。"; err.style.display = "block"; return;
+      }
+      payload.shares = divShares;
+    } else if(txType === "cash_dividend"){
+      var perShare = parseFloat(document.getElementById("txDividendPerShare").value);
+      if(!perShare || perShare <= 0){
+        err.textContent = "請輸入大於 0 的每股股利。"; err.style.display = "block"; return;
+      }
+      var sharesAtDate = sharesAsOfDate(stockId, date);
+      if(sharesAtDate <= 0){
+        err.textContent = "這個日期還沒有持股，請確認除息日或先記錄買進。"; err.style.display = "block"; return;
+      }
+      payload.perShare = perShare;
+      payload.shares = sharesAtDate;
+      payload.amount = perShare * sharesAtDate;
+      payload.payDate = addOneMonth(date);
+    }
+
+    state.txs.push(payload);
+    saveState();
+    closeTxModal();
+    render();
+  });
+
+  // ---------- Settlement account modal ----------
+
+  var settlementOverlay = document.getElementById("settlementOverlay");
+
+  function openSettlementModal(isFirstRun){
+    document.getElementById("settlementModalTitle").textContent = isFirstRun ? "設定交割戶頭餘額" : "編輯交割戶頭餘額";
+    document.getElementById("settlementCancel").style.display = isFirstRun ? "none" : "block";
+    document.getElementById("settlementSubmit").textContent = isFirstRun ? "開始使用" : "儲存";
+    var current = state.settlementInitial;
+    document.getElementById("settlementInput").value = (current === undefined || current === null) ? "" : current;
+    document.getElementById("settlementError").style.display = "none";
+    settlementOverlay.classList.add("open");
+  }
+  function closeSettlementModal(){ settlementOverlay.classList.remove("open"); }
+
+  document.getElementById("settlementCancel").addEventListener("click", closeSettlementModal);
+
+  document.getElementById("settlementSubmit").addEventListener("click", function(){
+    var raw = document.getElementById("settlementInput").value;
+    var num = parseFloat(raw);
+    if(raw === "" || isNaN(num) || num < 0){
+      document.getElementById("settlementError").style.display = "block";
+      return;
+    }
+    state.settlementInitial = num;
+    saveState();
+    closeSettlementModal();
+    render();
+    checkOnboarding();
+  });
+
+  // ---------- Initial holdings prompt ----------
+
+  var holdingsPromptOverlay = document.getElementById("holdingsPromptOverlay");
+
+  function openHoldingsPromptModal(){ holdingsPromptOverlay.classList.add("open"); }
+  function closeHoldingsPromptModal(){ holdingsPromptOverlay.classList.remove("open"); }
+
+  document.getElementById("holdingsNoBtn").addEventListener("click", function(){
+    state.askedInitialHoldings = true;
+    saveState();
+    closeHoldingsPromptModal();
+  });
+  document.getElementById("holdingsYesBtn").addEventListener("click", function(){
+    state.askedInitialHoldings = true;
+    saveState();
+    closeHoldingsPromptModal();
+    openStockModal(null);
+  });
+
+  function checkOnboarding(){
+    if(state.settlementInitial === undefined || state.settlementInitial === null){
+      openSettlementModal(true);
+      return;
+    }
+    if(state.askedInitialHoldings) return;
+    if(state.stocks.length === 0){
+      openHoldingsPromptModal();
+    } else {
+      state.askedInitialHoldings = true;
+      saveState();
+    }
+  }
+
+  render();
+  checkOnboarding();
+})();
+</script>
+</body>
+</html>

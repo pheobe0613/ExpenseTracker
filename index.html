@@ -338,7 +338,8 @@
     color:var(--red);
     font-variant-numeric:tabular-nums;
   }
-  .summary-card .sum-note{font-size:11px;color:var(--ink-faint);margin-top:2px;}
+  .sum-note{font-size:11px;color:var(--ink-faint);margin-top:4px;}
+  .summary-card .sum-note{margin-top:2px;}
   .chip-row{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
   .chip{
     font-size:11.5px;
@@ -691,6 +692,12 @@
       <input type="number" id="acctRate" min="0" step="0.01" placeholder="例如：1.2">
     </div>
 
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:16px;" id="acctSettlementRow">
+      <input type="checkbox" id="acctIsSettlement" style="width:auto;margin:0;">
+      交割戶（同步投資紀錄的交割戶餘額）
+    </label>
+    <p class="sum-note" id="acctSettlementNote" style="display:none;">勾選後這個帳戶的餘額 = 投資紀錄的交割戶餘額（買賣、配息）+ 在這裡記錄的轉帳／收支，兩邊都會算進去。</p>
+
     <p class="field-error" id="acctError">請輸入帳戶名稱。</p>
     <div class="modal-actions">
       <button class="btn" id="acctCancel">取消</button>
@@ -807,10 +814,34 @@
     return state.accounts.filter(function(a){ return a.id === id; })[0];
   }
 
+  function readInvestingSettlementBalance(){
+    try{
+      var raw = localStorage.getItem("investing-app-v1");
+      if(!raw) return null;
+      var inv = JSON.parse(raw);
+      if(!inv || !Array.isArray(inv.txs)) return null;
+      var bal = inv.settlementInitial || 0;
+      var today = todayStr();
+      inv.txs.forEach(function(t){
+        if(t.fromStockSetup) return;
+        if(t.type === "buy") bal -= t.shares * t.price;
+        else if(t.type === "sell") bal += t.shares * t.price;
+        else if(t.type === "cash_dividend"){
+          if(!t.payDate || t.payDate <= today) bal += t.amount;
+        }
+      });
+      return bal;
+    }catch(e){ return null; }
+  }
+
   function accountBalance(id){
     var acct = getAccount(id);
     if(!acct) return 0;
     var bal = acct.initialBalance || 0;
+    if(acct.isSettlement){
+      var synced = readInvestingSettlementBalance();
+      if(synced !== null) bal = synced;
+    }
     state.transactions.forEach(function(tx){
       if(tx.type === "income" && tx.accountId === id) bal += tx.amount;
       if(tx.type === "expense" && tx.accountId === id) bal -= tx.amount;
@@ -979,7 +1010,7 @@
     html += '<div class="grid-accounts">';
     state.accounts.forEach(function(a){
       html += '<button class="acct-card' + (a.type==="wallet" ? " wallet" : "") + '" data-goto="' + a.id + '">' +
-        '<span class="acct-name">' + escapeHtml(a.name) + (a.isSavings ? "　·　年利率 " + a.interestRate + "%" : "") + '</span>' +
+        '<span class="acct-name">' + escapeHtml(a.name) + (a.isSavings ? "　·　年利率 " + a.interestRate + "%" : "") + (a.isSettlement ? "　🔗 交割戶" : "") + '</span>' +
         '<span class="acct-balance">' + fmt(accountBalance(a.id)) + '</span>' +
       '</button>';
     });
@@ -1079,7 +1110,9 @@
 
     var html = '<div class="acct-header">' +
       '<div><h2>' + escapeHtml(acct.name) + '</h2>' +
-      '<div class="acct-header-balance">' + fmt(bal) + '</div></div>' +
+      '<div class="acct-header-balance">' + fmt(bal) + '</div>' +
+      (acct.isSettlement ? '<div class="sum-note">🔗 ' + (readInvestingSettlementBalance() !== null ? "已合併「投資紀錄」的交割戶餘額與這裡記錄的收支/轉帳" : "尚未偵測到「投資紀錄」的資料，目前只計入這裡記錄的收支/轉帳") + '</div>' : '') +
+      '</div>' +
       '<div class="header-actions">' +
         '<button class="icon-btn" id="editAcctBtn">編輯</button>' +
         (acct.type === "wallet" ? "" : '<button class="icon-btn danger" id="delAcctBtn">刪除</button>') +
@@ -1391,21 +1424,28 @@
       document.getElementById("acctName").disabled = isWallet;
       document.getElementById("acctIsSavings").checked = !!a.isSavings;
       document.getElementById("acctRate").value = a.interestRate || "";
+      document.getElementById("acctIsSettlement").checked = !!a.isSettlement;
     } else {
       document.getElementById("acctName").value = "";
       document.getElementById("acctInit").value = "";
       document.getElementById("acctName").disabled = false;
       document.getElementById("acctIsSavings").checked = false;
       document.getElementById("acctRate").value = "";
+      document.getElementById("acctIsSettlement").checked = false;
     }
     document.getElementById("acctSavingsRow").style.display = isWallet ? "none" : "flex";
     document.getElementById("acctRateBlock").style.display = document.getElementById("acctIsSavings").checked ? "block" : "none";
+    document.getElementById("acctSettlementRow").style.display = isWallet ? "none" : "flex";
+    document.getElementById("acctSettlementNote").style.display = document.getElementById("acctIsSettlement").checked ? "block" : "none";
     acctOverlay.classList.add("open");
   }
   function closeAccountModal(){ acctOverlay.classList.remove("open"); }
 
   document.getElementById("acctIsSavings").addEventListener("change", function(){
     document.getElementById("acctRateBlock").style.display = this.checked ? "block" : "none";
+  });
+  document.getElementById("acctIsSettlement").addEventListener("change", function(){
+    document.getElementById("acctSettlementNote").style.display = this.checked ? "block" : "none";
   });
 
   document.getElementById("acctCancel").addEventListener("click", closeAccountModal);
@@ -1416,6 +1456,7 @@
     var init = parseFloat(document.getElementById("acctInit").value) || 0;
     var isSavings = document.getElementById("acctIsSavings").checked;
     var rate = parseFloat(document.getElementById("acctRate").value) || 0;
+    var isSettlement = document.getElementById("acctIsSettlement").checked;
     var err = document.getElementById("acctError");
 
     if(editingAccountId){
@@ -1427,6 +1468,7 @@
         a.isSavings = isSavings;
         a.interestRate = isSavings ? rate : 0;
         if(isSavings && !wasSavings){ a.lastInterestDate = todayStr(); }
+        a.isSettlement = isSettlement;
       }
       a.initialBalance = init;
     } else {
@@ -1436,7 +1478,8 @@
         createdDate: todayStr(),
         isSavings: isSavings,
         interestRate: isSavings ? rate : 0,
-        lastInterestDate: isSavings ? todayStr() : null
+        lastInterestDate: isSavings ? todayStr() : null,
+        isSettlement: isSettlement
       });
     }
     saveState();

@@ -31,6 +31,7 @@
     --brass:#BD8A3F;
     --navy:#3E6FD9;
     --teal:#1F9C92;
+    --purple:#8B6FD9;
     --radius:18px;
     --radius-sm:12px;
     --shadow:0 10px 32px rgba(31,45,80,.14);
@@ -55,6 +56,7 @@
       --brass:#E4BB7E;
       --navy:#8FB2FF;
       --teal:#7BE3D6;
+      --purple:#B7A5F2;
       --shadow:0 10px 32px rgba(0,0,0,.5);
     }
   }
@@ -75,6 +77,7 @@
     --brass:#E4BB7E;
     --navy:#8FB2FF;
     --teal:#7BE3D6;
+    --purple:#B7A5F2;
     --shadow:0 10px 32px rgba(0,0,0,.5);
   }
   *{box-sizing:border-box;}
@@ -226,6 +229,9 @@
     flex:0 0 156px;
   }
   .acct-card.wallet{border-left-color:var(--brass);}
+  .acct-card.savings{border-left-color:var(--green);}
+  .acct-card.settlement{border-left-color:var(--teal);}
+  .acct-card.payroll{border-left-color:var(--purple);}
   .acct-card .acct-name{
     display:block;
     font-size:12.5px;
@@ -371,13 +377,14 @@
     border-bottom:1px solid var(--hairline);
     white-space:nowrap;
   }
+  table.ledger th.num{text-align:left;}
   table.ledger td{
     padding:9px 8px;
     border-bottom:1px solid var(--hairline);
     vertical-align:top;
   }
   table.ledger tr:last-child td{border-bottom:none;}
-  .num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .num{text-align:left;font-variant-numeric:tabular-nums;white-space:nowrap;}
   .num.out{color:var(--red);}
   .num.in{color:var(--green);}
   .num.bal{color:var(--ink-soft);}
@@ -698,6 +705,11 @@
     </label>
     <p class="sum-note" id="acctSettlementNote" style="display:none;">勾選後這個帳戶的餘額 = 投資紀錄的交割戶餘額（買賣、配息）+ 在這裡記錄的轉帳／收支，兩邊都會算進去。</p>
 
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:16px;font-size:15px;color:var(--ink);" id="acctPayrollRow">
+      <input type="checkbox" id="acctIsPayroll" style="width:auto;margin:0;">
+      薪轉戶
+    </label>
+
     <p class="field-error" id="acctError">請輸入帳戶名稱。</p>
     <div class="modal-actions">
       <button class="btn" id="acctCancel">取消</button>
@@ -929,7 +941,9 @@
     var endStr = dateToStr(range.end);
     var total = 0;
     state.transactions.forEach(function(tx){
-      if(tx.type === "expense" && tx.method === "card" && tx.cardId === card.id && tx.date >= startStr && tx.date <= endStr){
+      if(tx.type === "expense" && tx.cardId === card.id &&
+         (tx.method === "card" || tx.method === "epay") &&
+         tx.date >= startStr && tx.date <= endStr){
         total += tx.amount;
       }
     });
@@ -1009,8 +1023,12 @@
     // account cards
     html += '<div class="grid-accounts">';
     state.accounts.forEach(function(a){
-      html += '<button class="acct-card' + (a.type==="wallet" ? " wallet" : "") + '" data-goto="' + a.id + '">' +
-        '<span class="acct-name">' + escapeHtml(a.name) + (a.isSavings ? "　·　年利率 " + a.interestRate + "%" : "") + (a.isSettlement ? "　🔗 交割戶" : "") + '</span>' +
+      var typeClass = a.type === "wallet" ? " wallet" :
+        a.isSettlement ? " settlement" :
+        a.isPayroll ? " payroll" :
+        a.isSavings ? " savings" : "";
+      html += '<button class="acct-card' + typeClass + '" data-goto="' + a.id + '">' +
+        '<span class="acct-name">' + escapeHtml(a.name) + '</span>' +
         '<span class="acct-balance">' + fmt(accountBalance(a.id)) + '</span>' +
       '</button>';
     });
@@ -1065,11 +1083,11 @@
 
     html += '<h2 class="section-title">' + selectedDay.slice(5).replace("-","/") + '（' + WEEKDAY_LABELS[new Date(selectedDay+"T00:00:00").getDay()] + '）明細</h2>';
     html += '<div class="card ledger-wrap">';
-    var dayTx = state.transactions.filter(function(tx){ return tx.date === selectedDay; }).sort(byDateDesc);
+    var dayTx = state.transactions.filter(function(tx){ return tx.date === selectedDay && tx.type !== "transfer"; }).sort(byDateDesc);
     if(dayTx.length === 0){
       html += '<div class="empty-state">這天還沒有任何紀錄。</div>';
     } else {
-      html += '<table class="ledger"><thead><tr><th>日期</th><th>摘要</th><th>方式／帳戶</th><th class="num">提出</th><th class="num">存入</th><th></th></tr></thead><tbody>';
+      html += '<table class="ledger"><thead><tr><th>日期</th><th>摘要</th><th>方式</th><th>帳戶/卡片</th><th class="num">提出</th><th class="num">存入</th><th></th></tr></thead><tbody>';
       dayTx.forEach(function(tx){ html += renderTxRow(tx, null); });
       html += '</tbody></table>';
     }
@@ -1122,7 +1140,8 @@
     if(acct.isSavings && acct.interestRate){
       var accrued = accruedInterest(acct);
       html += '<div class="card summary-card" style="margin-bottom:16px;">' +
-        '<div class="sum-label">存錢帳戶 · 年利率 ' + acct.interestRate + '%</div>' +
+        '<div class="sum-label">存錢帳戶</div>'+
+        '<div class="sum-label">年利率 ' + acct.interestRate + '% </div>'+
         '<div class="sum-value" style="color:var(--green);">' + fmt(accrued) + '</div>' +
         '<div class="sum-note">試算利息（自上次入帳起算，入帳前不影響餘額）</div>' +
         (accrued >= 1 ? '<button class="icon-btn" id="postInterestBtn" style="margin-top:10px;">將利息存入帳戶</button>' : '') +
@@ -1133,21 +1152,25 @@
       return tx.accountId === id || tx.fromId === id || tx.toId === id;
     }).sort(byDateAsc);
 
-    // running balance
+    // running balance (transfers still affect balance even though they aren't listed)
     var running = acct.initialBalance || 0;
-    var rows = txs.map(function(tx){
+    var rows = [];
+    txs.forEach(function(tx){
       if(tx.type === "income" && tx.accountId === id) running += tx.amount;
       else if(tx.type === "expense" && tx.accountId === id) running -= tx.amount;
       else if(tx.type === "transfer" && tx.fromId === id) running -= tx.amount;
       else if(tx.type === "transfer" && tx.toId === id) running += tx.amount;
-      return renderTxRow(tx, id, running);
-    }).reverse();
+      if(tx.type !== "transfer"){
+        rows.push(renderTxRow(tx, id, running));
+      }
+    });
+    rows.reverse();
 
     html += '<div class="card ledger-wrap">';
     if(rows.length === 0){
       html += '<div class="empty-state">這個帳戶還沒有紀錄。</div>';
     } else {
-      html += '<table class="ledger"><thead><tr><th>日期</th><th>摘要</th><th>方式</th><th class="num">提出</th><th class="num">存入</th><th class="num">餘額</th><th></th></tr></thead><tbody>';
+      html += '<table class="ledger"><thead><tr><th>日期</th><th>摘要</th><th>方式</th><th>備註</th><th class="num">提出</th><th class="num">存入</th><th class="num">餘額</th><th></th></tr></thead><tbody>';
       html += rows.join("");
       html += '</tbody></table>';
     }
@@ -1165,44 +1188,32 @@
   }
 
   function renderTxRow(tx, contextAccountId, runningBalance){
-    var dateShort = tx.date.slice(5).replace("-", "/");
-    var main1 = "", sub = "", methodHtml = "", outVal = "", inVal = "";
+    if(tx.type === "transfer") return "";
 
-    if(tx.type === "transfer"){
-      var fromAcct = getAccount(tx.fromId);
-      var toAcct = getAccount(tx.toId);
-      main1 = "轉帳";
-      sub = (fromAcct?fromAcct.name:"—") + " → " + (toAcct?toAcct.name:"—");
-      methodHtml = '<span class="method-tag">⇄ 轉帳</span>';
-      if(contextAccountId === null){
-        // overview: show as neutral, no in/out since it nets to zero across accounts
-        outVal = "";
-        inVal = "";
-      } else if(contextAccountId === tx.fromId){
-        outVal = fmt(tx.amount);
-      } else if(contextAccountId === tx.toId){
-        inVal = fmt(tx.amount);
-      }
-    } else {
-      var acct = getAccount(tx.accountId);
-      var cardTag = tx.cardId && getCard(tx.cardId) ? getCard(tx.cardId).name : "";
-      main1 = tx.category || (tx.type === "income" ? "收入" : "支出");
-      sub = [tx.note, (contextAccountId === null && acct ? acct.name : ""), cardTag].filter(Boolean).join("　");
-      var epayPlat = (tx.method === "epay" && tx.epayPlatformId) ? getEpayPlatform(tx.epayPlatformId) : null;
-      var methodDisplayLabel = epayPlat ? epayPlat.name : methodLabel(tx.method);
-      methodHtml = tx.method
-        ? '<span class="method-tag">' + methodIconHtml(tx.method) + methodDisplayLabel + '</span>'
-        : '<span class="method-tag">利息</span>';
-      if(tx.type === "expense") outVal = fmt(tx.amount);
-      else inVal = fmt(tx.amount);
-    }
+    var dateShort = tx.date.slice(5).replace("-", "/");
+    var main1 = "", noteSub = "", methodHtml = "", outVal = "", inVal = "", acctCardText = "";
+
+    var acct = getAccount(tx.accountId);
+    var card = tx.cardId ? getCard(tx.cardId) : null;
+    main1 = tx.category || (tx.type === "income" ? "收入" : "支出");
+    noteSub = tx.note || "";
+    var epayPlat = (tx.method === "epay" && tx.epayPlatformId) ? getEpayPlatform(tx.epayPlatformId) : null;
+    var methodDisplayLabel = epayPlat ? epayPlat.name : methodLabel(tx.method);
+    methodHtml = tx.method
+      ? '<span class="method-tag">' + methodIconHtml(tx.method) + methodDisplayLabel + '</span>'
+      : '<span class="method-tag">利息</span>';
+    if(tx.type === "expense") outVal = Math.round(tx.amount).toLocaleString("zh-Hant-TW");
+    else inVal = Math.round(tx.amount).toLocaleString("zh-Hant-TW");
+    acctCardText = card ? card.name : (acct ? acct.name : "");
 
     var balCell = (typeof runningBalance === "number") ? '<td class="num bal">' + fmt(runningBalance) + '</td>' : "";
+    var acctCell = (contextAccountId === null) ? ('<td>' + (acctCardText ? escapeHtml(acctCardText) : '') + '</td>') : "";
 
     return '<tr>' +
       '<td>' + dateShort + '</td>' +
-      '<td><div class="memo-main">' + escapeHtml(main1) + '</div>' + (sub ? '<div class="memo-sub">' + escapeHtml(sub) + '</div>' : '') + '</td>' +
+      '<td><div class="memo-main">' + escapeHtml(main1) + '</div></td>' +
       '<td>' + methodHtml + '</td>' +
+      acctCell +
       '<td class="num out">' + outVal + '</td>' +
       '<td class="num in">' + inVal + '</td>' +
       balCell +
@@ -1425,6 +1436,7 @@
       document.getElementById("acctIsSavings").checked = !!a.isSavings;
       document.getElementById("acctRate").value = a.interestRate || "";
       document.getElementById("acctIsSettlement").checked = !!a.isSettlement;
+      document.getElementById("acctIsPayroll").checked = !!a.isPayroll;
     } else {
       document.getElementById("acctName").value = "";
       document.getElementById("acctInit").value = "";
@@ -1432,11 +1444,13 @@
       document.getElementById("acctIsSavings").checked = false;
       document.getElementById("acctRate").value = "";
       document.getElementById("acctIsSettlement").checked = false;
+      document.getElementById("acctIsPayroll").checked = false;
     }
     document.getElementById("acctSavingsRow").style.display = isWallet ? "none" : "flex";
     document.getElementById("acctRateBlock").style.display = document.getElementById("acctIsSavings").checked ? "block" : "none";
     document.getElementById("acctSettlementRow").style.display = isWallet ? "none" : "flex";
     document.getElementById("acctSettlementNote").style.display = document.getElementById("acctIsSettlement").checked ? "block" : "none";
+    document.getElementById("acctPayrollRow").style.display = isWallet ? "none" : "flex";
     acctOverlay.classList.add("open");
   }
   function closeAccountModal(){ acctOverlay.classList.remove("open"); }
@@ -1471,6 +1485,7 @@
     var isSavings = document.getElementById("acctIsSavings").checked;
     var rate = parseFloat(document.getElementById("acctRate").value) || 0;
     var isSettlement = document.getElementById("acctIsSettlement").checked;
+    var isPayroll = document.getElementById("acctIsPayroll").checked;
     var err = document.getElementById("acctError");
 
     if(editingAccountId){
@@ -1485,6 +1500,7 @@
         var wasSettlement = !!a.isSettlement;
         a.isSettlement = isSettlement;
         if(isSettlement && !wasSettlement){ seedInvestingSettlementBalance(init); }
+        a.isPayroll = isPayroll;
       }
       a.initialBalance = init;
     } else {
@@ -1495,7 +1511,8 @@
         isSavings: isSavings,
         interestRate: isSavings ? rate : 0,
         lastInterestDate: isSavings ? todayStr() : null,
-        isSettlement: isSettlement
+        isSettlement: isSettlement,
+        isPayroll: isPayroll
       });
       if(isSettlement){ seedInvestingSettlementBalance(init); }
     }

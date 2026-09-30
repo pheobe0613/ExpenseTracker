@@ -138,6 +138,7 @@
   .empty-state{text-align:center;padding:30px 10px;color:var(--ink-faint);font-size:13.5px;}
 
   .summary-row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px;}
+  .summary-row > *:first-child{grid-column:1 / -1;}
   @media (max-width:520px){.summary-row{grid-template-columns:1fr 1fr;}}
   .summary-card .sum-label{font-size:12px;color:var(--ink-faint);margin-bottom:2px;}
   .summary-card .sum-value{font-family:var(--font-serif);font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;}

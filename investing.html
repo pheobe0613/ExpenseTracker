@@ -137,7 +137,7 @@
   .section-title{font-family:var(--font-serif);font-size:15px;font-weight:600;margin:0 0 10px;}
   .empty-state{text-align:center;padding:30px 10px;color:var(--ink-faint);font-size:13.5px;}
 
-  .summary-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px;}
+  .summary-row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px;}
   @media (max-width:520px){.summary-row{grid-template-columns:1fr 1fr;}}
   .summary-card .sum-label{font-size:12px;color:var(--ink-faint);margin-bottom:2px;}
   .summary-card .sum-value{font-family:var(--font-serif);font-size:20px;font-weight:700;font-variant-numeric:tabular-nums;}
@@ -662,13 +662,13 @@
 
     var html = "";
     html += '<div class="summary-row">';
-    html += '<div class="card summary-card"><div class="sum-label">總投入成本</div><div class="sum-value">' + fmt(t.cost) + '</div></div>';
-    html += '<div class="card summary-card"><div class="sum-label">累積配息</div><div class="sum-value pos">' + fmt(t.dividends) + '</div></div>';
     html += '<div class="card summary-card">' +
       '<div class="sum-label">交割戶頭餘額</div>' +
       '<div class="sum-value">' + fmt(settlementBalance()) + '</div>' +
       '<button class="icon-btn" id="editSettlementBtn" style="margin-top:8px;">編輯餘額</button>' +
     '</div>';
+    html += '<div class="card summary-card"><div class="sum-label">總投入成本</div><div class="sum-value">' + fmt(t.cost) + '</div></div>';
+    html += '<div class="card summary-card"><div class="sum-label">累積配息</div><div class="sum-value pos">' + fmt(t.dividends) + '</div></div>';
     html += '</div>';
 
     html += '<h2 class="section-title">持股</h2>';
@@ -693,6 +693,7 @@
           '<span class="stock-symbol">' + escapeHtml(s.symbol) + '</span>' +
           '<span class="stock-name">' + escapeHtml(s.name) + '</span>' +
           '<span class="stock-shares">' + pos.shares.toLocaleString("zh-Hant-TW") + ' 股</span>' +
+          '<br>'+
           '<span class="stock-cost">成本 ' + fmt(stockDisplayCost(s, pos)) + '</span>' +
         '</button>';
       });

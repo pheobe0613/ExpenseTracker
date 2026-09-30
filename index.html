@@ -683,7 +683,7 @@
     <label for="acctInit">目前餘額</label>
     <input type="number" id="acctInit" min="0" step="1" placeholder="0">
 
-    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:16px;" id="acctSavingsRow">
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:16px;font-size:15px;color:var(--ink);" id="acctSavingsRow">
       <input type="checkbox" id="acctIsSavings" style="width:auto;margin:0;">
       存錢帳戶（自動試算利息）
     </label>
@@ -692,7 +692,7 @@
       <input type="number" id="acctRate" min="0" step="0.01" placeholder="例如：1.2">
     </div>
 
-    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:16px;" id="acctSettlementRow">
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:16px;font-size:15px;color:var(--ink);" id="acctSettlementRow">
       <input type="checkbox" id="acctIsSettlement" style="width:auto;margin:0;">
       交割戶（同步投資紀錄的交割戶餘額）
     </label>
@@ -1451,6 +1451,20 @@
   document.getElementById("acctCancel").addEventListener("click", closeAccountModal);
   acctOverlay.addEventListener("click", function(e){ if(e.target === acctOverlay) closeAccountModal(); });
 
+  function seedInvestingSettlementBalance(amount){
+    try{
+      var raw = localStorage.getItem("investing-app-v1");
+      var inv = raw ? JSON.parse(raw) : null;
+      if(!inv || !Array.isArray(inv.stocks) || !Array.isArray(inv.txs)){
+        inv = { stocks: [], txs: [] };
+      }
+      if(inv.settlementInitial === undefined || inv.settlementInitial === null){
+        inv.settlementInitial = amount;
+        localStorage.setItem("investing-app-v1", JSON.stringify(inv));
+      }
+    }catch(e){ /* best effort */ }
+  }
+
   document.getElementById("acctSubmit").addEventListener("click", function(){
     var name = document.getElementById("acctName").value.trim();
     var init = parseFloat(document.getElementById("acctInit").value) || 0;
@@ -1468,7 +1482,9 @@
         a.isSavings = isSavings;
         a.interestRate = isSavings ? rate : 0;
         if(isSavings && !wasSavings){ a.lastInterestDate = todayStr(); }
+        var wasSettlement = !!a.isSettlement;
         a.isSettlement = isSettlement;
+        if(isSettlement && !wasSettlement){ seedInvestingSettlementBalance(init); }
       }
       a.initialBalance = init;
     } else {
@@ -1481,6 +1497,7 @@
         lastInterestDate: isSavings ? todayStr() : null,
         isSettlement: isSettlement
       });
+      if(isSettlement){ seedInvestingSettlementBalance(init); }
     }
     saveState();
     closeAccountModal();

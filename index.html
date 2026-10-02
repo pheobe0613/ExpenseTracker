@@ -1185,15 +1185,21 @@
       var fromAcct = getAccount(tx.fromId);
       var toAcct = getAccount(tx.toId);
       main1 = "轉帳";
-      noteSub = tx.note || "";
       acctCardText = (fromAcct?fromAcct.name:"—") + " → " + (toAcct?toAcct.name:"—");
       methodHtml = '<span class="method-tag">⇄ 轉帳</span>';
       if(contextAccountId === tx.fromId){
         outVal = Math.round(tx.amount).toLocaleString("zh-Hant-TW");
-      } else if(contextAccountId === tx.toId){
+        noteSub = ["→ " + (toAcct ? toAcct.name : "—"), tx.note].filter(Boolean).join("　");
+      } 
+      else if(contextAccountId === tx.toId){
         inVal = Math.round(tx.amount).toLocaleString("zh-Hant-TW");
+        noteSub = ["← " + (fromAcct ? fromAcct.name : "—"), tx.note].filter(Boolean).join("　");
       }
-    } else {
+      else{
+        noteSub = tx.note || "";
+      }
+    }
+    else {
       var acct = getAccount(tx.accountId);
       var card = tx.cardId ? getCard(tx.cardId) : null;
       main1 = tx.category || (tx.type === "income" ? "收入" : "支出");

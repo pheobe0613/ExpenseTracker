@@ -709,6 +709,12 @@
       薪轉戶
     </label>
 
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:16px;font-size:15px;color:var(--ink);" id="acctDebitRow">
+      <input type="checkbox" id="acctHasDebit" style="width:auto;margin:0;">
+      簽帳金融卡
+    </label>
+    <p class="sum-note" id="acctDebitNote" style="display:none;">勾選後會自動加入「信用卡」欄位（不需要結帳日），用這張卡付款時會直接從這個帳戶扣款。</p>
+
     <p class="field-error" id="acctError">請輸入帳戶名稱。</p>
     <div class="modal-actions">
       <button class="btn" id="acctCancel">取消</button>
@@ -723,7 +729,7 @@
     <h3 id="cardModalTitle">新增信用卡</h3>
     <label for="cardName">卡片名稱</label>
     <input type="text" id="cardName" placeholder="例如：國泰世華 CUBE 卡">
-    <label for="cardStatementDay">結帳日（每月幾號）</label>
+    <label for="cardStatementDay" id="cardStatementLabel">結帳日（每月幾號）</label>
     <input type="number" id="cardStatementDay" min="1" max="31" step="1" placeholder="例如：15">
     <p class="field-error" id="cardError">請輸入卡片名稱，結帳日需介於 1–31。</p>
     <div class="modal-actions">
@@ -919,6 +925,12 @@
 
   function cardCycleRange(card){
     var today = new Date();
+    if(!card.statementDay){
+      return {
+        start: new Date(today.getFullYear(), today.getMonth(), 1),
+        end: new Date(today.getFullYear(), today.getMonth() + 1, 0)
+      };
+    }
     var day = today.getDate();
     var sd = card.statementDay;
     var endMonth = today.getMonth();
@@ -1042,7 +1054,7 @@
       state.cards.forEach(function(c){
         html += '<button class="cc-card" data-editcard="' + c.id + '">' +
           '<span class="cc-name">' + escapeHtml(c.name) + '</span>' +
-          '<span class="cc-meta">每月' + c.statementDay + '日結帳</span>' +
+          '<span class="cc-meta">' + (c.statementDay ? '每月' + c.statementDay + '日結帳' : '簽帳金融卡') + '</span>' +
           '<span class="cc-amount">' + fmt(cardCycleSpend(c)) + '</span>' +
         '</button>';
       });
@@ -1415,6 +1427,10 @@
         ? (document.getElementById("txCard").value || null) : null;
       var epayPlatformId = (document.getElementById("txEpayBlock").style.display !== "none")
         ? (document.getElementById("txEpayPlatform").value || null) : null;
+      var chosenCard = cardId ? getCard(cardId) : null;
+      if(chosenCard && chosenCard.linkedAccountId && !accountId){
+        accountId = chosenCard.linkedAccountId;
+      }
       state.transactions.push({
         id: uid(), type: txType, date: date, amount: amount,
         accountId: accountId, method: method, category: category, note: note, cardId: cardId, epayPlatformId: epayPlatformId
@@ -1445,6 +1461,7 @@
       document.getElementById("acctRate").value = a.interestRate || "";
       document.getElementById("acctIsSettlement").checked = !!a.isSettlement;
       document.getElementById("acctIsPayroll").checked = !!a.isPayroll;
+      document.getElementById("acctHasDebit").checked = !!getDebitCardForAccount(a.id);
     } else {
       document.getElementById("acctName").value = "";
       document.getElementById("acctInit").value = "";
@@ -1453,12 +1470,15 @@
       document.getElementById("acctRate").value = "";
       document.getElementById("acctIsSettlement").checked = false;
       document.getElementById("acctIsPayroll").checked = false;
+      document.getElementById("acctHasDebit").checked = false;
     }
     document.getElementById("acctSavingsRow").style.display = isWallet ? "none" : "flex";
     document.getElementById("acctRateBlock").style.display = document.getElementById("acctIsSavings").checked ? "block" : "none";
     document.getElementById("acctSettlementRow").style.display = isWallet ? "none" : "flex";
     document.getElementById("acctSettlementNote").style.display = document.getElementById("acctIsSettlement").checked ? "block" : "none";
     document.getElementById("acctPayrollRow").style.display = isWallet ? "none" : "flex";
+    document.getElementById("acctDebitRow").style.display = isWallet ? "none" : "flex";
+    document.getElementById("acctDebitNote").style.display = document.getElementById("acctHasDebit").checked ? "block" : "none";
     acctOverlay.classList.add("open");
   }
   function closeAccountModal(){ acctOverlay.classList.remove("open"); }
@@ -1468,6 +1488,9 @@
   });
   document.getElementById("acctIsSettlement").addEventListener("change", function(){
     document.getElementById("acctSettlementNote").style.display = this.checked ? "block" : "none";
+  });
+  document.getElementById("acctHasDebit").addEventListener("change", function(){
+    document.getElementById("acctDebitNote").style.display = this.checked ? "block" : "none";
   });
 
   document.getElementById("acctCancel").addEventListener("click", closeAccountModal);
@@ -1494,7 +1517,9 @@
     var rate = parseFloat(document.getElementById("acctRate").value) || 0;
     var isSettlement = document.getElementById("acctIsSettlement").checked;
     var isPayroll = document.getElementById("acctIsPayroll").checked;
+    var hasDebit = document.getElementById("acctHasDebit").checked;
     var err = document.getElementById("acctError");
+    var savedAccountId = editingAccountId;
 
     if(editingAccountId){
       var a = getAccount(editingAccountId);
@@ -1509,12 +1534,14 @@
         a.isSettlement = isSettlement;
         if(isSettlement && !wasSettlement){ seedInvestingSettlementBalance(init); }
         a.isPayroll = isPayroll;
+        syncDebitCard(a.id, a.name, hasDebit);
       }
       a.initialBalance = init;
     } else {
       if(!name){ err.style.display = "block"; return; }
+      savedAccountId = uid();
       state.accounts.push({
-        id: uid(), name: name, type: "bank", initialBalance: init,
+        id: savedAccountId, name: name, type: "bank", initialBalance: init,
         createdDate: todayStr(),
         isSavings: isSavings,
         interestRate: isSavings ? rate : 0,
@@ -1523,11 +1550,33 @@
         isPayroll: isPayroll
       });
       if(isSettlement){ seedInvestingSettlementBalance(init); }
+      syncDebitCard(savedAccountId, name, hasDebit);
     }
     saveState();
     closeAccountModal();
     render();
   });
+
+  // ---------- Debit card linked to an account ----------
+
+  function getDebitCardForAccount(accountId){
+    return state.cards.filter(function(c){ return c.linkedAccountId === accountId; })[0];
+  }
+
+  function syncDebitCard(accountId, accountName, wanted){
+    var existing = getDebitCardForAccount(accountId);
+    if(wanted && !existing){
+      state.cards.push({
+        id: uid(), name: accountName + " 簽帳金融卡",
+        statementDay: null, linkedAccountId: accountId
+      });
+    } else if(!wanted && existing){
+      state.cards = state.cards.filter(function(c){ return c.id !== existing.id; });
+      state.transactions.forEach(function(tx){
+        if(tx.cardId === existing.id) tx.cardId = null;
+      });
+    }
+  }
 
   function postInterest(id){
     var acct = getAccount(id);
@@ -1554,6 +1603,7 @@
     state.transactions = state.transactions.filter(function(tx){
       return tx.accountId !== id && tx.fromId !== id && tx.toId !== id;
     });
+    syncDebitCard(id, "", false);
     saveState();
     activeTab = "overview";
     render();
@@ -1569,10 +1619,13 @@
     document.getElementById("cardModalTitle").textContent = isEdit ? "編輯信用卡" : "新增信用卡";
     document.getElementById("cardError").style.display = "none";
     document.getElementById("cardDelete").style.display = isEdit ? "block" : "none";
+    var isDebit = isEdit && !!getCard(id).linkedAccountId;
+    document.getElementById("cardStatementLabel").style.display = isDebit ? "none" : "block";
+    document.getElementById("cardStatementDay").style.display = isDebit ? "none" : "block";
     if(isEdit){
       var c = getCard(id);
       document.getElementById("cardName").value = c.name;
-      document.getElementById("cardStatementDay").value = c.statementDay;
+      document.getElementById("cardStatementDay").value = c.statementDay || "";
     } else {
       document.getElementById("cardName").value = "";
       document.getElementById("cardStatementDay").value = "";
@@ -1588,14 +1641,15 @@
     var name = document.getElementById("cardName").value.trim();
     var day = parseInt(document.getElementById("cardStatementDay").value, 10);
     var err = document.getElementById("cardError");
-    if(!name || !day || day < 1 || day > 31){
+    var editingDebit = !!editingCardId && !!getCard(editingCardId).linkedAccountId;
+    if(!name || (!editingDebit && (!day || day < 1 || day > 31))){
       err.style.display = "block";
       return;
     }
     if(editingCardId){
       var c = getCard(editingCardId);
       c.name = name;
-      c.statementDay = day;
+      if(!editingDebit) c.statementDay = day;
     } else {
       state.cards.push({ id: uid(), name: name, statementDay: day });
     }

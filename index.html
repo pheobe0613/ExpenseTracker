@@ -346,6 +346,15 @@
   .sum-note{font-size:11px;color:var(--ink-faint);margin-top:4px;}
   .summary-card .sum-note{margin-top:2px;}
   .chip-row{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
+  .summary-card.clickable{cursor:pointer;}
+  .summary-card.clickable:hover{border-color:var(--ink-soft);}
+  .pie-wrap{display:flex;gap:18px;align-items:center;flex-wrap:wrap;justify-content:center;}
+  .pie-legend{flex:1 1 200px;min-width:200px;}
+  .pie-row{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13px;}
+  .pie-dot{width:10px;height:10px;border-radius:3px;flex:0 0 auto;}
+  .pie-name{flex:1;}
+  .pie-val{font-variant-numeric:tabular-nums;}
+  .pie-pct{color:var(--ink-faint);font-size:11.5px;min-width:44px;text-align:right;}
   .chip{
     font-size:11.5px;
     padding:3px 9px;
@@ -426,6 +435,10 @@
     font-family:var(--font-sans);
   }
   .icon-btn:hover{border-color:var(--ink-soft);}
+  .icon-btn:disabled{opacity:.4;cursor:default;}
+  .icon-btn:disabled:hover{border-color:var(--glass-border);}
+  .cycle-nav{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .cycle-label{flex:1;text-align:center;font-size:13px;font-weight:600;color:var(--ink-soft);}
   .icon-btn.danger:hover{color:var(--red);border-color:var(--red);}
   .header-actions{display:flex;gap:6px;}
 
@@ -713,7 +726,6 @@
       <input type="checkbox" id="acctHasDebit" style="width:auto;margin:0;">
       簽帳金融卡
     </label>
-    <p class="sum-note" id="acctDebitNote" style="display:none;">勾選後會自動加入「信用卡」欄位（不需要結帳日），用這張卡付款時會直接從這個帳戶扣款。</p>
 
     <p class="field-error" id="acctError">請輸入帳戶名稱。</p>
     <div class="modal-actions">
@@ -783,6 +795,7 @@
   var editingCardId = null;
   var editingPlatformId = null;
   var selectedDay = null;
+  var cardOffset = 0;
 
   function defaultEpayPlatforms(){
     return ["LINE Pay","街口支付","悠遊付","icash Pay","台灣Pay","Apple Pay","Google Pay"].map(function(name){
@@ -798,6 +811,17 @@
         if(parsed && Array.isArray(parsed.accounts) && Array.isArray(parsed.transactions)){
           if(!Array.isArray(parsed.cards)) parsed.cards = [];
           if(!Array.isArray(parsed.epayPlatforms)) parsed.epayPlatforms = defaultEpayPlatforms();
+          // 舊版曾替「簽帳金融卡」自動建立卡片；現在只在帳戶上保留標記
+          var autoCards = parsed.cards.filter(function(c){ return c.linkedAccountId; });
+          if(autoCards.length){
+            autoCards.forEach(function(c){
+              var owner = parsed.accounts.filter(function(a){ return a.id === c.linkedAccountId; })[0];
+              if(owner) owner.hasDebitCard = true;
+              parsed.transactions.forEach(function(tx){ if(tx.cardId === c.id) tx.cardId = null; });
+            });
+            parsed.cards = parsed.cards.filter(function(c){ return !c.linkedAccountId; });
+            try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed)); }catch(e){ /* best effort */ }
+          }
           return parsed;
         }
       }
@@ -923,14 +947,9 @@
     return y + "-" + m + "-" + day;
   }
 
-  function cardCycleRange(card){
+  function cardCycleRange(card, offset){
+    offset = offset || 0;
     var today = new Date();
-    if(!card.statementDay){
-      return {
-        start: new Date(today.getFullYear(), today.getMonth(), 1),
-        end: new Date(today.getFullYear(), today.getMonth() + 1, 0)
-      };
-    }
     var day = today.getDate();
     var sd = card.statementDay;
     var endMonth = today.getMonth();
@@ -939,26 +958,26 @@
       endMonth += 1;
       if(endMonth > 11){ endMonth = 0; endYear += 1; }
     }
-    var cycleEnd = new Date(endYear, endMonth, sd);
+    var cycleEnd = new Date(endYear, endMonth + offset, sd);
     var cycleStart = new Date(cycleEnd);
     cycleStart.setMonth(cycleStart.getMonth() - 1);
     cycleStart.setDate(cycleStart.getDate() + 1);
     return { start: cycleStart, end: cycleEnd };
   }
 
-  function cardCycleSpend(card){
-    var range = cardCycleRange(card);
+  function cardCycleTxs(card, offset){
+    var range = cardCycleRange(card, offset);
     var startStr = dateToStr(range.start);
     var endStr = dateToStr(range.end);
-    var total = 0;
-    state.transactions.forEach(function(tx){
-      if(tx.type === "expense" && tx.cardId === card.id &&
-         (tx.method === "card" || tx.method === "epay") &&
-         tx.date >= startStr && tx.date <= endStr){
-        total += tx.amount;
-      }
+    return state.transactions.filter(function(tx){
+      return tx.type === "expense" && tx.cardId === card.id &&
+        (tx.method === "card" || tx.method === "epay") &&
+        tx.date >= startStr && tx.date <= endStr;
     });
-    return total;
+  }
+
+  function cardCycleSpend(card){
+    return cardCycleTxs(card).reduce(function(sum, tx){ return sum + tx.amount; }, 0);
   }
 
   function methodLabel(m){
@@ -998,6 +1017,10 @@
     renderTabs();
     if(activeTab === "overview"){
       renderOverview();
+    } else if(activeTab === "month"){
+      renderMonthView();
+    } else if(activeTab.indexOf("card:") === 0){
+      renderCardView(activeTab.slice(5));
     } else {
       renderAccountView(activeTab);
     }
@@ -1054,7 +1077,7 @@
       state.cards.forEach(function(c){
         html += '<button class="cc-card" data-editcard="' + c.id + '">' +
           '<span class="cc-name">' + escapeHtml(c.name) + '</span>' +
-          '<span class="cc-meta">' + (c.statementDay ? '每月' + c.statementDay + '日結帳' : '簽帳金融卡') + '</span>' +
+          '<span class="cc-meta">' + '每月' + c.statementDay + '日結帳' + '</span>' +
           '<span class="cc-amount">' + fmt(cardCycleSpend(c)) + '</span>' +
         '</button>';
       });
@@ -1069,7 +1092,7 @@
 
     html += '<div class="summary-row">';
     html += summaryCard("今日支出", dayTotals);
-    html += summaryCard("本月支出", monthTotals);
+    html += summaryCard("本月支出", monthTotals, true);
     html += '</div>';
 
     // week strip (Sunday first)
@@ -1112,14 +1135,20 @@
     main.querySelectorAll("[data-day]").forEach(function(el){
       el.addEventListener("click", function(){ selectedDay = el.getAttribute("data-day"); render(); });
     });
+    main.querySelectorAll("[data-open-month]").forEach(function(el){
+      function open(){ activeTab = "month"; render(); }
+      el.addEventListener("click", open);
+      el.addEventListener("keydown", function(e){ if(e.key === "Enter" || e.key === " "){ e.preventDefault(); open(); } });
+    });
     main.querySelectorAll("[data-editcard]").forEach(function(el){
-      el.addEventListener("click", function(){ openCardModal(el.getAttribute("data-editcard")); });
+      el.addEventListener("click", function(){ cardOffset = 0; activeTab = "card:" + el.getAttribute("data-editcard"); render(); });
     });
     bindRowDeletes(main);
   }
 
-  function summaryCard(title, totals){
-    return '<div class="card summary-card">' +
+  function summaryCard(title, totals, clickable){
+    return '<div class="card summary-card' + (clickable ? ' clickable' : '') + '"' +
+      (clickable ? ' data-open-month="1" role="button" tabindex="0"' : '') + '>' +
       '<div class="sum-label">' + title + '</div>' +
       '<div class="sum-value">' + fmt(totals.all) + '</div>' +
       '<div class="chip-row">' +
@@ -1127,7 +1156,142 @@
         '<span class="chip">' + methodIconHtml("card") + fmt(totals.card) + '</span>' +
         '<span class="chip">' + methodIconHtml("epay") + fmt(totals.epay) + '</span>' +
       '</div>' +
+      (clickable ? '<div class="sum-note">點擊查看明細與圓餅圖</div>' : '') +
     '</div>';
+  }
+
+  var PIE_COLORS = ["var(--navy)", "var(--red)", "var(--green)", "var(--brass)", "var(--teal)", "var(--purple)", "#E58FB4", "#7FA6C9", "#9AA5B1"];
+
+  function pieSvg(slices, total){
+    var cx = 90, cy = 90, r = 82;
+    var inner = "";
+    if(slices.length === 1){
+      inner = '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" style="fill:' + slices[0].color + '"></circle>';
+    } else {
+      var angle = -Math.PI / 2;
+      slices.forEach(function(sl){
+        var frac = sl.value / total;
+        var end = angle + frac * 2 * Math.PI;
+        var x1 = cx + r * Math.cos(angle), y1 = cy + r * Math.sin(angle);
+        var x2 = cx + r * Math.cos(end), y2 = cy + r * Math.sin(end);
+        inner += '<path d="M' + cx + ' ' + cy + ' L' + x1.toFixed(2) + ' ' + y1.toFixed(2) +
+          ' A' + r + ' ' + r + ' 0 ' + (frac > 0.5 ? 1 : 0) + ' 1 ' + x2.toFixed(2) + ' ' + y2.toFixed(2) +
+          ' Z" style="fill:' + sl.color + ';stroke:var(--glass-strong);stroke-width:1.5"></path>';
+        angle = end;
+      });
+    }
+    return '<svg viewBox="0 0 180 180" width="180" height="180" role="img" aria-label="本月支出分類圓餅圖">' + inner + '</svg>';
+  }
+
+  function renderMonthView(){
+    var main = document.getElementById("mainView");
+    var thisMonth = yearMonth(todayStr());
+    var monthLabel = thisMonth.slice(0,4) + "年" + parseInt(thisMonth.slice(5,7), 10) + "月";
+
+    var txs = state.transactions.filter(function(tx){
+      return tx.type !== "transfer" && yearMonth(tx.date) === thisMonth;
+    }).sort(byDateDesc);
+    var expenses = txs.filter(function(tx){ return tx.type === "expense"; });
+    var total = expenses.reduce(function(sum, tx){ return sum + tx.amount; }, 0);
+
+    var html = '<div class="acct-header"><div>' +
+      '<h2>' + monthLabel + ' 支出</h2>' +
+      '<div class="acct-header-balance">' + fmt(total) + '</div>' +
+      '<div class="sum-note">不含帳戶間轉帳</div>' +
+    '</div></div>';
+
+    // pie chart: expenses grouped by category
+    html += '<div class="card" style="margin-bottom:16px;"><h2 class="section-title">支出分類</h2>';
+    if(expenses.length === 0){
+      html += '<div class="empty-state">本月還沒有支出。</div>';
+    } else {
+      var byCat = {};
+      expenses.forEach(function(tx){
+        var key = tx.category || "未分類";
+        byCat[key] = (byCat[key] || 0) + tx.amount;
+      });
+      var entries = Object.keys(byCat).map(function(k){ return { name: k, value: byCat[k] }; })
+        .sort(function(a, b){ return b.value - a.value; });
+      var MAX = PIE_COLORS.length - 1;
+      if(entries.length > PIE_COLORS.length){
+        var rest = entries.slice(MAX).reduce(function(sum, e){ return sum + e.value; }, 0);
+        entries = entries.slice(0, MAX).concat([{ name: "其他", value: rest }]);
+      }
+      entries.forEach(function(e, i){ e.color = PIE_COLORS[i]; });
+      html += '<div class="pie-wrap">' + pieSvg(entries, total) + '<div class="pie-legend">';
+      entries.forEach(function(e){
+        html += '<div class="pie-row"><span class="pie-dot" style="background:' + e.color + '"></span>' +
+          '<span class="pie-name">' + escapeHtml(e.name) + '</span>' +
+          '<span class="pie-val">' + fmt(e.value) + '</span>' +
+          '<span class="pie-pct">' + (e.value / total * 100).toFixed(1) + '%</span></div>';
+      });
+      html += '</div></div>';
+    }
+    html += '</div>';
+
+    // all records this month (income and expense)
+    html += '<div class="card ledger-wrap">';
+    if(txs.length === 0){
+      html += '<div class="empty-state">本月還沒有紀錄。</div>';
+    } else {
+      html += '<table class="ledger"><thead><tr><th>日期</th><th>摘要</th><th>方式</th><th>帳戶/卡片</th><th class="num">提出</th><th class="num">存入</th><th></th></tr></thead><tbody>';
+      txs.forEach(function(tx){ html += renderTxRow(tx, null); });
+      html += '</tbody></table>';
+    }
+    html += '</div>';
+
+    main.innerHTML = html;
+    bindRowDeletes(main);
+  }
+
+  function renderCardView(id){
+    var card = getCard(id);
+    if(!card){ activeTab = "overview"; return renderOverview(); }
+    var main = document.getElementById("mainView");
+    var range = cardCycleRange(card, cardOffset);
+    var thisYear = new Date().getFullYear();
+    function md(d){
+      var str = dateToStr(d);
+      return (d.getFullYear() !== thisYear ? str.slice(0,4) + "/" : "") + str.slice(5).replace("-", "/");
+    }
+    var cycleName = cardOffset === 0 ? "本期" : cardOffset === -1 ? "上一期" : "前" + (-cardOffset) + "期";
+    var txs = cardCycleTxs(card, cardOffset).sort(byDateDesc);
+    var total = txs.reduce(function(sum, tx){ return sum + tx.amount; }, 0);
+    var startStr = dateToStr(range.start);
+    var hasEarlier = state.transactions.some(function(tx){
+      return tx.type === "expense" && tx.cardId === card.id &&
+        (tx.method === "card" || tx.method === "epay") && tx.date < startStr;
+    });
+
+    var html = '<div class="acct-header"><div>' +
+      '<h2>' + escapeHtml(card.name) + '</h2>' +
+      '<div class="acct-header-balance">' + fmt(total) + '</div>' +
+      '<div class="sum-note">每月' + card.statementDay + '日結帳　' + cycleName + ' ' + md(range.start) + ' – ' + md(range.end) + '</div>' +
+    '</div><div class="header-actions">' +
+      '<button class="icon-btn" id="editCardViewBtn">編輯</button>' +
+    '</div></div>';
+
+    html += '<div class="cycle-nav">' +
+      '<button class="icon-btn" id="cyclePrevBtn"' + (hasEarlier ? '' : ' disabled') + '>‹ 上一期</button>' +
+      '<span class="cycle-label">' + cycleName + '</span>' +
+      '<button class="icon-btn" id="cycleNextBtn"' + (cardOffset < 0 ? '' : ' disabled') + '>下一期 ›</button>' +
+    '</div>';
+
+    html += '<div class="card ledger-wrap">';
+    if(txs.length === 0){
+      html += '<div class="empty-state">這個結帳週期還沒有消費紀錄。</div>';
+    } else {
+      html += '<table class="ledger"><thead><tr><th>日期</th><th>摘要</th><th>方式</th><th class="num">提出</th><th class="num">存入</th><th></th></tr></thead><tbody>';
+      txs.forEach(function(tx){ html += renderTxRow(tx, "card"); });
+      html += '</tbody></table>';
+    }
+    html += '</div>';
+
+    main.innerHTML = html;
+    document.getElementById("editCardViewBtn").addEventListener("click", function(){ openCardModal(card.id); });
+    document.getElementById("cyclePrevBtn").addEventListener("click", function(){ cardOffset -= 1; render(); });
+    document.getElementById("cycleNextBtn").addEventListener("click", function(){ if(cardOffset < 0){ cardOffset += 1; render(); } });
+    bindRowDeletes(main);
   }
 
   function renderAccountView(id){
@@ -1284,7 +1448,7 @@
     });
     updateTxTypeUI();
     populateAccountSelects();
-    if(activeTab !== "overview"){
+    if(activeTab !== "overview" && getAccount(activeTab)){
       document.getElementById("txAccount").value = activeTab;
     }
     document.getElementById("txError").style.display = "none";
@@ -1318,16 +1482,33 @@
     var selectedMethod = checked ? checked.value : "cash";
     var isTransfer = txType === "transfer";
     var showEpay = !isTransfer && selectedMethod === "epay";
-    var showCard = !isTransfer && (selectedMethod === "card" || selectedMethod === "epay") && state.cards.length > 0;
+    var showCard = !isTransfer && (selectedMethod === "card" || selectedMethod === "epay") &&
+      (state.cards.length > 0 || debitAccounts().length > 0);
     var showAccount = !isTransfer && selectedMethod === "cash";
     document.getElementById("txAccountBlock").style.display = showAccount ? "block" : "none";
     document.getElementById("txEpayBlock").style.display = showEpay ? "block" : "none";
     document.getElementById("txCardBlock").style.display = showCard ? "block" : "none";
     if(showEpay) populateEpayPlatformSelect();
     if(showCard){
-      document.getElementById("txCard").innerHTML = '<option value="">未指定</option>' +
-        state.cards.map(function(c){ return '<option value="' + c.id + '">' + escapeHtml(c.name) + '</option>'; }).join("");
+      var cardOpts = '<option value="">未指定</option>';
+      if(state.cards.length){
+        cardOpts += '<optgroup label="信用卡">' +
+          state.cards.map(function(c){ return '<option value="' + c.id + '">' + escapeHtml(c.name) + '</option>'; }).join("") +
+          '</optgroup>';
+      }
+      var debits = debitAccounts();
+      if(debits.length){
+        cardOpts += '<optgroup label="簽帳金融卡（直接扣款）">' +
+          debits.map(function(a){ return '<option value="debit:' + a.id + '">' + escapeHtml(a.name) + ' 簽帳金融卡</option>'; }).join("") +
+          '</optgroup>';
+      }
+      document.getElementById("txCard").innerHTML = cardOpts;
     }
+  }
+
+  // 標記為「簽帳金融卡」的帳戶：不出現在信用卡那排，但付款時可選，並直接從該帳戶扣款
+  function debitAccounts(){
+    return state.accounts.filter(function(a){ return a.hasDebitCard; });
   }
 
   function populateEpayPlatformSelect(){
@@ -1425,12 +1606,13 @@
       var category = document.getElementById("txCat").value.trim();
       var cardId = (document.getElementById("txCardBlock").style.display !== "none")
         ? (document.getElementById("txCard").value || null) : null;
+      if(cardId && cardId.indexOf("debit:") === 0){
+        var debitAcctId = cardId.slice(6);
+        cardId = null;
+        if(getAccount(debitAcctId)) accountId = debitAcctId;
+      }
       var epayPlatformId = (document.getElementById("txEpayBlock").style.display !== "none")
         ? (document.getElementById("txEpayPlatform").value || null) : null;
-      var chosenCard = cardId ? getCard(cardId) : null;
-      if(chosenCard && chosenCard.linkedAccountId && !accountId){
-        accountId = chosenCard.linkedAccountId;
-      }
       state.transactions.push({
         id: uid(), type: txType, date: date, amount: amount,
         accountId: accountId, method: method, category: category, note: note, cardId: cardId, epayPlatformId: epayPlatformId
@@ -1461,7 +1643,7 @@
       document.getElementById("acctRate").value = a.interestRate || "";
       document.getElementById("acctIsSettlement").checked = !!a.isSettlement;
       document.getElementById("acctIsPayroll").checked = !!a.isPayroll;
-      document.getElementById("acctHasDebit").checked = !!getDebitCardForAccount(a.id);
+      document.getElementById("acctHasDebit").checked = !!a.hasDebitCard;
     } else {
       document.getElementById("acctName").value = "";
       document.getElementById("acctInit").value = "";
@@ -1478,7 +1660,6 @@
     document.getElementById("acctSettlementNote").style.display = document.getElementById("acctIsSettlement").checked ? "block" : "none";
     document.getElementById("acctPayrollRow").style.display = isWallet ? "none" : "flex";
     document.getElementById("acctDebitRow").style.display = isWallet ? "none" : "flex";
-    document.getElementById("acctDebitNote").style.display = document.getElementById("acctHasDebit").checked ? "block" : "none";
     acctOverlay.classList.add("open");
   }
   function closeAccountModal(){ acctOverlay.classList.remove("open"); }
@@ -1488,9 +1669,6 @@
   });
   document.getElementById("acctIsSettlement").addEventListener("change", function(){
     document.getElementById("acctSettlementNote").style.display = this.checked ? "block" : "none";
-  });
-  document.getElementById("acctHasDebit").addEventListener("change", function(){
-    document.getElementById("acctDebitNote").style.display = this.checked ? "block" : "none";
   });
 
   document.getElementById("acctCancel").addEventListener("click", closeAccountModal);
@@ -1519,7 +1697,6 @@
     var isPayroll = document.getElementById("acctIsPayroll").checked;
     var hasDebit = document.getElementById("acctHasDebit").checked;
     var err = document.getElementById("acctError");
-    var savedAccountId = editingAccountId;
 
     if(editingAccountId){
       var a = getAccount(editingAccountId);
@@ -1534,49 +1711,27 @@
         a.isSettlement = isSettlement;
         if(isSettlement && !wasSettlement){ seedInvestingSettlementBalance(init); }
         a.isPayroll = isPayroll;
-        syncDebitCard(a.id, a.name, hasDebit);
+        a.hasDebitCard = hasDebit;
       }
       a.initialBalance = init;
     } else {
       if(!name){ err.style.display = "block"; return; }
-      savedAccountId = uid();
       state.accounts.push({
-        id: savedAccountId, name: name, type: "bank", initialBalance: init,
+        id: uid(), name: name, type: "bank", initialBalance: init,
         createdDate: todayStr(),
         isSavings: isSavings,
         interestRate: isSavings ? rate : 0,
         lastInterestDate: isSavings ? todayStr() : null,
         isSettlement: isSettlement,
-        isPayroll: isPayroll
+        isPayroll: isPayroll,
+        hasDebitCard: hasDebit
       });
       if(isSettlement){ seedInvestingSettlementBalance(init); }
-      syncDebitCard(savedAccountId, name, hasDebit);
     }
     saveState();
     closeAccountModal();
     render();
   });
-
-  // ---------- Debit card linked to an account ----------
-
-  function getDebitCardForAccount(accountId){
-    return state.cards.filter(function(c){ return c.linkedAccountId === accountId; })[0];
-  }
-
-  function syncDebitCard(accountId, accountName, wanted){
-    var existing = getDebitCardForAccount(accountId);
-    if(wanted && !existing){
-      state.cards.push({
-        id: uid(), name: accountName + " 簽帳金融卡",
-        statementDay: null, linkedAccountId: accountId
-      });
-    } else if(!wanted && existing){
-      state.cards = state.cards.filter(function(c){ return c.id !== existing.id; });
-      state.transactions.forEach(function(tx){
-        if(tx.cardId === existing.id) tx.cardId = null;
-      });
-    }
-  }
 
   function postInterest(id){
     var acct = getAccount(id);
@@ -1603,7 +1758,6 @@
     state.transactions = state.transactions.filter(function(tx){
       return tx.accountId !== id && tx.fromId !== id && tx.toId !== id;
     });
-    syncDebitCard(id, "", false);
     saveState();
     activeTab = "overview";
     render();
@@ -1619,13 +1773,10 @@
     document.getElementById("cardModalTitle").textContent = isEdit ? "編輯信用卡" : "新增信用卡";
     document.getElementById("cardError").style.display = "none";
     document.getElementById("cardDelete").style.display = isEdit ? "block" : "none";
-    var isDebit = isEdit && !!getCard(id).linkedAccountId;
-    document.getElementById("cardStatementLabel").style.display = isDebit ? "none" : "block";
-    document.getElementById("cardStatementDay").style.display = isDebit ? "none" : "block";
     if(isEdit){
       var c = getCard(id);
       document.getElementById("cardName").value = c.name;
-      document.getElementById("cardStatementDay").value = c.statementDay || "";
+      document.getElementById("cardStatementDay").value = c.statementDay;
     } else {
       document.getElementById("cardName").value = "";
       document.getElementById("cardStatementDay").value = "";
@@ -1641,15 +1792,14 @@
     var name = document.getElementById("cardName").value.trim();
     var day = parseInt(document.getElementById("cardStatementDay").value, 10);
     var err = document.getElementById("cardError");
-    var editingDebit = !!editingCardId && !!getCard(editingCardId).linkedAccountId;
-    if(!name || (!editingDebit && (!day || day < 1 || day > 31))){
+    if(!name || !day || day < 1 || day > 31){
       err.style.display = "block";
       return;
     }
     if(editingCardId){
       var c = getCard(editingCardId);
       c.name = name;
-      if(!editingDebit) c.statementDay = day;
+      c.statementDay = day;
     } else {
       state.cards.push({ id: uid(), name: name, statementDay: day });
     }

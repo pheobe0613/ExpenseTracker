@@ -302,7 +302,34 @@
     margin:0 0 10px;
   }
 
+  /* ---------- Account type dropdown ---------- */
+  .dd-btn{
+    width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;
+    padding:9px 10px;border:1px solid var(--glass-border);border-radius:var(--radius-sm);
+    background:var(--glass-input);color:var(--ink);font-family:var(--font-sans);font-size:16px;
+    cursor:pointer;text-align:left;
+  }
+  #acctTypeSummary{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .dd-caret{color:var(--ink-faint);transition:transform .15s;}
+  .dd-btn[aria-expanded="true"] .dd-caret{transform:rotate(180deg);}
+  .dd-panel{
+    margin-top:6px;padding:2px 12px;
+    border:1px solid var(--glass-border);border-radius:var(--radius-sm);background:var(--glass-input);
+  }
+  .dd-opt{display:flex;align-items:center;gap:10px;margin:0;padding:11px 0;font-size:15px;color:var(--ink);cursor:pointer;}
+  .dd-opt + .dd-opt{border-top:1px solid var(--hairline);}
+  .dd-opt input{width:auto;margin:0;}
+
   /* ---------- Week strip ---------- */
+  .week-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+  .week-head .section-title{flex:1;text-align:center;margin:0;}
+  .week-nav{
+    flex:0 0 auto;width:32px;height:32px;padding:0 0 2px;
+    display:inline-flex;align-items:center;justify-content:center;
+    background:var(--glass-input);border:1px solid var(--glass-border);border-radius:50%;
+    color:var(--ink-soft);font-size:20px;line-height:1;cursor:pointer;
+  }
+  .week-nav:hover{border-color:var(--ink-soft);}
   .week-strip{
     display:grid;
     grid-template-columns:repeat(7,1fr);
@@ -557,6 +584,14 @@
   }
   .method-pick input{display:none;}
   .method-pick label.active{border-color:var(--ink);background:var(--glass-strong);color:var(--ink);}
+  .modal-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px;}
+  .modal-head h3{margin:0;}
+  .icon-btn.icon-only{padding:7px;line-height:0;display:inline-flex;align-items:center;justify-content:center;}
+  .manage-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+  .manage-row input[type=text]{flex:1;}
+  .manage-row .show-opt{display:flex;align-items:center;gap:4px;font-size:11.5px;color:var(--ink-soft);white-space:nowrap;margin:0;}
+  .tx-row{cursor:pointer;}
+  .tx-row:hover td{background:rgba(127,127,127,.07);}
   .cat-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
   .cat-chip{
     font-size:12px;padding:4px 10px;border-radius:999px;
@@ -618,7 +653,10 @@
 <!-- Transaction modal -->
 <div class="overlay" id="txOverlay">
   <div class="modal">
-    <h3 id="txModalTitle">新增紀錄</h3>
+    <div class="modal-head">
+      <h3 id="txModalTitle">新增紀錄</h3>
+      <button type="button" class="icon-btn icon-only" id="txManageBtn" title="編輯分類與電子支付平台" aria-label="編輯分類與電子支付平台"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="6" x2="7" y2="6"></line><circle cx="9" cy="6" r="2"></circle><line x1="11" y1="6" x2="20" y2="6"></line><line x1="4" y1="12" x2="13" y2="12"></line><circle cx="15" cy="12" r="2"></circle><line x1="17" y1="12" x2="20" y2="12"></line><line x1="4" y1="18" x2="5" y2="18"></line><circle cx="7" cy="18" r="2"></circle><line x1="9" y1="18" x2="20" y2="18"></line></svg></button>
+    </div>
     <div class="seg" id="txTypeSeg">
       <button type="button" data-type="expense" class="active">支出</button>
       <button type="button" data-type="income">收入</button>
@@ -675,9 +713,7 @@
     </div>
 
     <div id="txCatBlock">
-      <label for="txCat">分類</label>
-      <input type="text" id="txCat" list="catList" placeholder="例如：餐飲、交通、薪資">
-      <datalist id="catList"></datalist>
+      <label>分類</label>
       <div class="cat-chips" id="catChips"></div>
     </div>
 
@@ -693,6 +729,28 @@
   </div>
 </div>
 
+<!-- Options manager: categories / e-pay platforms -->
+<div class="overlay" id="manageOverlay">
+  <div class="modal">
+    <h3>編輯選項</h3>
+    <div class="seg" id="manageSeg">
+      <button type="button" data-tab="expense" class="active">支出分類</button>
+      <button type="button" data-tab="income">收入分類</button>
+      <button type="button" data-tab="platform">電子支付平台</button>
+    </div>
+    <p class="sum-note" id="manageNote" style="margin:10px 0 8px;"></p>
+    <div id="manageList"></div>
+    <div style="display:flex;gap:6px;margin-top:6px;">
+      <input type="text" id="manageNewName" placeholder="新增" style="flex:1;">
+      <button type="button" class="btn primary" id="manageAddBtn" style="flex:0 0 auto;">新增</button>
+    </div>
+    <p class="field-error" id="manageError"></p>
+    <div class="modal-actions">
+      <button class="btn primary" id="manageClose">完成</button>
+    </div>
+  </div>
+</div>
+
 <!-- Account modal -->
 <div class="overlay" id="acctOverlay">
   <div class="modal">
@@ -700,32 +758,27 @@
     <label for="acctName">帳戶名稱</label>
     <input type="text" id="acctName" placeholder="例如：台新銀行、國泰世華">
     <label for="acctInit">目前餘額</label>
-    <input type="number" id="acctInit" min="0" step="1" placeholder="0">
+    <input type="number" id="acctInit" inputmode="numeric" pattern="[0-9]*" min="0" step="1" placeholder="0">
 
-    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:16px;font-size:15px;color:var(--ink);" id="acctSavingsRow">
-      <input type="checkbox" id="acctIsSavings" style="width:auto;margin:0;">
-      存錢帳戶（自動試算利息）
-    </label>
+    <div id="acctTypeBlock" style="margin-top:16px;">
+      <label for="acctTypeBtn" style="margin-top:0;">帳戶類型（可複選）</label>
+      <div class="dd" id="acctTypeDd">
+        <button type="button" class="dd-btn" id="acctTypeBtn" aria-haspopup="true" aria-expanded="false">
+          <span id="acctTypeSummary">一般帳戶</span><span class="dd-caret" aria-hidden="true">▾</span>
+        </button>
+        <div class="dd-panel" id="acctTypePanel" style="display:none;">
+          <label class="dd-opt" id="acctSavingsRow"><input type="checkbox" id="acctIsSavings"> 存錢帳戶（自動試算利息）</label>
+          <label class="dd-opt" id="acctSettlementRow"><input type="checkbox" id="acctIsSettlement"> 交割戶（同步投資紀錄的交割戶餘額）</label>
+          <label class="dd-opt" id="acctPayrollRow"><input type="checkbox" id="acctIsPayroll"> 薪轉戶</label>
+          <label class="dd-opt" id="acctDebitRow"><input type="checkbox" id="acctHasDebit"> 簽帳金融卡</label>
+        </div>
+      </div>
+    </div>
     <div id="acctRateBlock" style="display:none;">
       <label for="acctRate">年利率（%）</label>
       <input type="number" id="acctRate" min="0" step="0.01" placeholder="例如：1.2">
     </div>
-
-    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:16px;font-size:15px;color:var(--ink);" id="acctSettlementRow">
-      <input type="checkbox" id="acctIsSettlement" style="width:auto;margin:0;">
-      交割戶（同步投資紀錄的交割戶餘額）
-    </label>
     <p class="sum-note" id="acctSettlementNote" style="display:none;">勾選後這個帳戶的餘額 = 投資紀錄的交割戶餘額（買賣、配息）+ 在這裡記錄的轉帳／收支，兩邊都會算進去。</p>
-
-    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:16px;font-size:15px;color:var(--ink);" id="acctPayrollRow">
-      <input type="checkbox" id="acctIsPayroll" style="width:auto;margin:0;">
-      薪轉戶
-    </label>
-
-    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-top:16px;font-size:15px;color:var(--ink);" id="acctDebitRow">
-      <input type="checkbox" id="acctHasDebit" style="width:auto;margin:0;">
-      簽帳金融卡
-    </label>
 
     <p class="field-error" id="acctError">請輸入帳戶名稱。</p>
     <div class="modal-actions">
@@ -795,6 +848,7 @@
   var editingCardId = null;
   var editingPlatformId = null;
   var selectedDay = null;
+  var weekOffset = 0;
   var cardOffset = 0;
 
   function defaultEpayPlatforms(){
@@ -811,6 +865,8 @@
         if(parsed && Array.isArray(parsed.accounts) && Array.isArray(parsed.transactions)){
           if(!Array.isArray(parsed.cards)) parsed.cards = [];
           if(!Array.isArray(parsed.epayPlatforms)) parsed.epayPlatforms = defaultEpayPlatforms();
+          if(!Array.isArray(parsed.expenseCats)) parsed.expenseCats = EXPENSE_CATS.slice();
+          if(!Array.isArray(parsed.incomeCats)) parsed.incomeCats = INCOME_CATS.slice();
           // 舊版曾替「簽帳金融卡」自動建立卡片；現在只在帳戶上保留標記
           var autoCards = parsed.cards.filter(function(c){ return c.linkedAccountId; });
           if(autoCards.length){
@@ -830,7 +886,9 @@
       accounts: [ {id: WALLET_ID, name:"現金錢包", type:"wallet", initialBalance:0} ],
       transactions: [],
       cards: [],
-      epayPlatforms: defaultEpayPlatforms()
+      epayPlatforms: defaultEpayPlatforms(),
+      expenseCats: EXPENSE_CATS.slice(),
+      incomeCats: INCOME_CATS.slice()
     };
   }
 
@@ -915,6 +973,15 @@
   }
 
   var WEEKDAY_LABELS = ["日","一","二","三","四","五","六"];
+
+  // 切換週：選中的那天跟著移動（同一個星期幾），畫面上看到的明細才會在該週內
+  function shiftWeek(delta){
+    weekOffset += delta;
+    var sel = new Date(selectedDay + "T00:00:00");
+    sel.setDate(sel.getDate() + delta * 7);
+    selectedDay = dateToStr(sel);
+    render();
+  }
 
   function startOfWeek(dateStr){
     var d = new Date(dateStr + "T00:00:00");
@@ -1095,10 +1162,20 @@
     html += summaryCard("本月支出", monthTotals, true);
     html += '</div>';
 
-    // week strip (Sunday first)
+    // week strip (Sunday first); ‹ › switch weeks
     if(selectedDay === null) selectedDay = today;
     var weekStart = startOfWeek(today);
-    html += '<h2 class="section-title">本週紀錄</h2>';
+    weekStart.setDate(weekStart.getDate() + weekOffset * 7);
+    var weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+    function mdShort(dt){ return (dt.getMonth() + 1) + "/" + dt.getDate(); }
+    var weekTitle = weekOffset === 0 ? "本週紀錄" : weekOffset === -1 ? "上週紀錄" : weekOffset === 1 ? "下週紀錄" :
+      mdShort(weekStart) + " – " + mdShort(weekEnd) + " 紀錄";
+    html += '<div class="week-head">' +
+      '<button type="button" class="week-nav" id="weekPrevBtn" aria-label="上一週">‹</button>' +
+      '<h2 class="section-title">' + weekTitle + '</h2>' +
+      '<button type="button" class="week-nav" id="weekNextBtn" aria-label="下一週">›</button>' +
+    '</div>';
     html += '<div class="week-strip">';
     for(var i = 0; i < 7; i++){
       var d = new Date(weekStart);
@@ -1135,6 +1212,10 @@
     main.querySelectorAll("[data-day]").forEach(function(el){
       el.addEventListener("click", function(){ selectedDay = el.getAttribute("data-day"); render(); });
     });
+    var weekPrevBtn = document.getElementById("weekPrevBtn");
+    var weekNextBtn = document.getElementById("weekNextBtn");
+    if(weekPrevBtn) weekPrevBtn.addEventListener("click", function(){ shiftWeek(-1); });
+    if(weekNextBtn) weekNextBtn.addEventListener("click", function(){ shiftWeek(1); });
     main.querySelectorAll("[data-open-month]").forEach(function(el){
       function open(){ activeTab = "month"; render(); }
       el.addEventListener("click", open);
@@ -1143,7 +1224,7 @@
     main.querySelectorAll("[data-editcard]").forEach(function(el){
       el.addEventListener("click", function(){ cardOffset = 0; activeTab = "card:" + el.getAttribute("data-editcard"); render(); });
     });
-    bindRowDeletes(main);
+    bindRowActions(main);
   }
 
   function summaryCard(title, totals, clickable){
@@ -1241,7 +1322,7 @@
     html += '</div>';
 
     main.innerHTML = html;
-    bindRowDeletes(main);
+    bindRowActions(main);
   }
 
   function renderCardView(id){
@@ -1291,7 +1372,7 @@
     document.getElementById("editCardViewBtn").addEventListener("click", function(){ openCardModal(card.id); });
     document.getElementById("cyclePrevBtn").addEventListener("click", function(){ cardOffset -= 1; render(); });
     document.getElementById("cycleNextBtn").addEventListener("click", function(){ if(cardOffset < 0){ cardOffset += 1; render(); } });
-    bindRowDeletes(main);
+    bindRowActions(main);
   }
 
   function renderAccountView(id){
@@ -1348,7 +1429,7 @@
     if(delBtn) delBtn.addEventListener("click", function(){ deleteAccount(acct.id); });
     var postBtn = document.getElementById("postInterestBtn");
     if(postBtn) postBtn.addEventListener("click", function(){ postInterest(acct.id); });
-    bindRowDeletes(main);
+    bindRowActions(main);
   }
 
   function renderTxRow(tx, contextAccountId, runningBalance){
@@ -1393,7 +1474,7 @@
     var balCell = (typeof runningBalance === "number") ? '<td class="num bal">' + fmt(runningBalance) + '</td>' : "";
     var acctCell = (contextAccountId === null) ? ('<td>' + (acctCardText ? escapeHtml(acctCardText) : '') + '</td>') : "";
 
-    return '<tr>' +
+    return '<tr class="tx-row" tabindex="0" data-editid="' + tx.id + '">' +
       '<td>' + dateShort + '</td>' +
       '<td><div class="memo-main">' + escapeHtml(main1) + '</div>' + (noteSub ? '<div class="memo-sub">' + escapeHtml(noteSub) + '</div>' : '') + '</td>' +
       '<td>' + methodHtml + '</td>' +
@@ -1405,9 +1486,18 @@
     '</tr>';
   }
 
-  function bindRowDeletes(scope){
+  function bindRowActions(scope){
+    scope.querySelectorAll("tr[data-editid]").forEach(function(tr){
+      function openEdit(){ openTxModal(tr.getAttribute("data-editid")); }
+      tr.addEventListener("click", openEdit);
+      tr.addEventListener("keydown", function(e){
+        if(e.target !== tr) return;
+        if(e.key === "Enter" || e.key === " "){ e.preventDefault(); openEdit(); }
+      });
+    });
     scope.querySelectorAll("[data-delid]").forEach(function(btn){
-      btn.addEventListener("click", function(){
+      btn.addEventListener("click", function(e){
+        e.stopPropagation();
         var id = btn.getAttribute("data-delid");
         if(confirm("確定要刪除這筆紀錄嗎？")){
           state.transactions = state.transactions.filter(function(tx){ return tx.id !== id; });
@@ -1432,35 +1522,87 @@
   var txOverlay = document.getElementById("txOverlay");
   var txType = "expense";
 
-  function openTxModal(){
-    txType = "expense";
-    document.getElementById("txDate").value = todayStr();
-    document.getElementById("txAmount").value = "";
-    document.getElementById("txNote").value = "";
-    document.getElementById("txCat").value = "";
+  var txCategory = "";
+  var editingTxId = null;
+  var editingTxOrig = null;
+  var txMethodTouched = false;
+  var editExtraDebitAcctId = null;   // 編輯舊紀錄時，保留已取消「簽帳金融卡」標記的帳戶選項
+  var editExtraPlatformId = null;    // 編輯舊紀錄時，保留已隱藏的電子支付平台
+
+  function setSelectIfExists(sel, val){
+    if(!val) return;
+    for(var i = 0; i < sel.options.length; i++){
+      if(sel.options[i].value === val){ sel.value = val; return; }
+    }
+  }
+
+  // editId 有值 = 編輯那一筆；沒有 = 新增
+  function openTxModal(editId){
+    var tx = editId ? state.transactions.filter(function(t){ return t.id === editId; })[0] : null;
+    editingTxId = tx ? tx.id : null;
+    editingTxOrig = tx || null;
+    txMethodTouched = false;
+    editExtraDebitAcctId = null;
+    editExtraPlatformId = null;
+    var isTransferTx = !!tx && tx.type === "transfer";
+    if(tx && !isTransferTx){
+      var owner = tx.accountId ? getAccount(tx.accountId) : null;
+      if((tx.method === "card" || tx.method === "epay") && owner && !tx.cardId && !owner.hasDebitCard){
+        editExtraDebitAcctId = owner.id;
+      }
+      var usedPlatform = (tx.method === "epay" && tx.epayPlatformId) ? getEpayPlatform(tx.epayPlatformId) : null;
+      if(usedPlatform && usedPlatform.hidden) editExtraPlatformId = usedPlatform.id;
+    }
+    var method = (tx && !isTransferTx && tx.method) ? tx.method : "cash";
+
+    document.getElementById("txModalTitle").textContent = tx ? "編輯紀錄" : "新增紀錄";
+    txType = tx ? tx.type : "expense";
+    txCategory = (tx && !isTransferTx) ? (tx.category || "") : "";
+    document.getElementById("txDate").value = tx ? tx.date : todayStr();
+    document.getElementById("txAmount").value = tx ? tx.amount : "";
+    document.getElementById("txNote").value = tx ? (tx.note || "") : "";
     document.getElementById("txEpayPlatform").value = "";
-    document.querySelector('input[name="method"][value="cash"]').checked = true;
+    document.querySelector('input[name="method"][value="' + method + '"]').checked = true;
     Array.prototype.forEach.call(document.getElementById("methodPick").children, function(l){
-      l.classList.toggle("active", l.getAttribute("data-m") === "cash");
+      l.classList.toggle("active", l.getAttribute("data-m") === method);
     });
     Array.prototype.forEach.call(document.getElementById("txTypeSeg").children, function(b){
-      b.classList.toggle("active", b.getAttribute("data-type") === "expense");
+      b.classList.toggle("active", b.getAttribute("data-type") === txType);
     });
-    updateTxTypeUI();
     populateAccountSelects();
-    if(activeTab !== "overview" && getAccount(activeTab)){
+    updateTxTypeUI();
+    if(tx){
+      if(isTransferTx){
+        setSelectIfExists(document.getElementById("txFrom"), tx.fromId);
+        setSelectIfExists(document.getElementById("txTo"), tx.toId);
+      } else {
+        setSelectIfExists(document.getElementById("txAccount"), tx.accountId);
+        if(tx.method === "epay") setSelectIfExists(document.getElementById("txEpayPlatform"), tx.epayPlatformId);
+        if(tx.method === "card" || tx.method === "epay"){
+          setSelectIfExists(document.getElementById("txCard"), (tx.accountId && !tx.cardId) ? "debit:" + tx.accountId : tx.cardId);
+        }
+      }
+    } else if(activeTab !== "overview" && getAccount(activeTab)){
       document.getElementById("txAccount").value = activeTab;
     }
     document.getElementById("txError").style.display = "none";
     txOverlay.classList.add("open");
   }
 
-  function closeTxModal(){ txOverlay.classList.remove("open"); }
+  function closeTxModal(){
+    txOverlay.classList.remove("open");
+    editingTxId = null;
+    editingTxOrig = null;
+    editExtraDebitAcctId = null;
+    editExtraPlatformId = null;
+  }
 
   document.getElementById("txTypeSeg").addEventListener("click", function(e){
     var btn = e.target.closest("button[data-type]");
     if(!btn) return;
-    txType = btn.getAttribute("data-type");
+    var newType = btn.getAttribute("data-type");
+    if(newType !== txType) txCategory = "";
+    txType = newType;
     Array.prototype.forEach.call(document.getElementById("txTypeSeg").children, function(b){
       b.classList.toggle("active", b === btn);
     });
@@ -1482,8 +1624,11 @@
     var selectedMethod = checked ? checked.value : "cash";
     var isTransfer = txType === "transfer";
     var showEpay = !isTransfer && selectedMethod === "epay";
+    var debits = debitAccounts();
+    var extraDebit = editExtraDebitAcctId ? getAccount(editExtraDebitAcctId) : null;
+    if(extraDebit && !debits.some(function(a){ return a.id === extraDebit.id; })) debits = debits.concat([extraDebit]);
     var showCard = !isTransfer && (selectedMethod === "card" || selectedMethod === "epay") &&
-      (state.cards.length > 0 || debitAccounts().length > 0);
+      (state.cards.length > 0 || debits.length > 0);
     var showAccount = !isTransfer && selectedMethod === "cash";
     document.getElementById("txAccountBlock").style.display = showAccount ? "block" : "none";
     document.getElementById("txEpayBlock").style.display = showEpay ? "block" : "none";
@@ -1496,7 +1641,6 @@
           state.cards.map(function(c){ return '<option value="' + c.id + '">' + escapeHtml(c.name) + '</option>'; }).join("") +
           '</optgroup>';
       }
-      var debits = debitAccounts();
       if(debits.length){
         cardOpts += '<optgroup label="簽帳金融卡（直接扣款）">' +
           debits.map(function(a){ return '<option value="debit:' + a.id + '">' + escapeHtml(a.name) + ' 簽帳金融卡</option>'; }).join("") +
@@ -1514,10 +1658,10 @@
   function populateEpayPlatformSelect(){
     var sel = document.getElementById("txEpayPlatform");
     var current = sel.value;
-    var visible = state.epayPlatforms.filter(function(p){ return !p.hidden; });
+    var visible = state.epayPlatforms.filter(function(p){ return !p.hidden || p.id === editExtraPlatformId; });
     sel.innerHTML = '<option value="">請選擇</option>' +
       visible.map(function(p){ return '<option value="' + p.id + '">' + escapeHtml(p.name) + '</option>'; }).join("");
-    if(current && getEpayPlatform(current) && !getEpayPlatform(current).hidden) sel.value = current;
+    if(current && visible.some(function(p){ return p.id === current; })) sel.value = current;
   }
 
   function populateAccountSelects(){
@@ -1541,6 +1685,7 @@
   document.getElementById("methodPick").addEventListener("click", function(e){
     var label = e.target.closest("label[data-m]");
     if(!label) return;
+    txMethodTouched = true;
     Array.prototype.forEach.call(document.getElementById("methodPick").children, function(l){
       l.classList.toggle("active", l === label);
     });
@@ -1554,25 +1699,30 @@
     openPlatformListModal();
   });
 
+  function catsFor(type){
+    return type === "income" ? state.incomeCats : state.expenseCats;
+  }
+
   function renderCatChips(){
-    var cats = txType === "income" ? INCOME_CATS : EXPENSE_CATS;
+    var cats = catsFor(txType).slice();
+    // 已選的分類就算被從清單刪掉，編輯舊紀錄時仍保留
+    if(txCategory && cats.indexOf(txCategory) === -1) cats.push(txCategory);
     var wrap = document.getElementById("catChips");
     wrap.innerHTML = cats.map(function(c){
-      return '<button type="button" class="cat-chip" data-cat="' + escapeHtml(c) + '">' + escapeHtml(c) + '</button>';
-    }).join("");
-    document.getElementById("catList").innerHTML = cats.map(function(c){
-      return '<option value="' + escapeHtml(c) + '">';
+      return '<button type="button" class="cat-chip' + (c === txCategory ? ' active' : '') + '" data-cat="' + escapeHtml(c) + '">' + escapeHtml(c) + '</button>';
     }).join("");
     Array.prototype.forEach.call(wrap.children, function(chip){
       chip.addEventListener("click", function(){
-        document.getElementById("txCat").value = chip.getAttribute("data-cat");
-        Array.prototype.forEach.call(wrap.children, function(c){ c.classList.toggle("active", c===chip); });
+        var c = chip.getAttribute("data-cat");
+        txCategory = (txCategory === c) ? "" : c;
+        renderCatChips();
       });
     });
   }
 
   document.getElementById("txCancel").addEventListener("click", closeTxModal);
-  document.getElementById("fabAdd").addEventListener("click", openTxModal);
+  document.getElementById("fabAdd").addEventListener("click", function(){ openTxModal(); });
+  document.getElementById("txManageBtn").addEventListener("click", function(){ openManageModal(); });
   txOverlay.addEventListener("click", function(e){ if(e.target === txOverlay) closeTxModal(); });
 
   document.getElementById("txSubmit").addEventListener("click", function(){
@@ -1587,6 +1737,7 @@
       return;
     }
 
+    var rec;
     if(txType === "transfer"){
       var fromId = document.getElementById("txFrom").value;
       var toId = document.getElementById("txTo").value;
@@ -1595,15 +1746,13 @@
         err.style.display = "block";
         return;
       }
-      state.transactions.push({
-        id: uid(), type:"transfer", date: date, amount: amount,
-        fromId: fromId, toId: toId, note: note
-      });
+      rec = { type: "transfer", date: date, amount: amount, fromId: fromId, toId: toId, note: note };
     } else {
       var accountId = (document.getElementById("txAccountBlock").style.display !== "none")
         ? document.getElementById("txAccount").value : null;
       var method = document.querySelector('input[name="method"]:checked').value;
-      var category = document.getElementById("txCat").value.trim();
+      // 沒有支付方式的舊紀錄（例如利息入帳），沒動過就維持原樣
+      if(editingTxOrig && editingTxOrig.type !== "transfer" && !editingTxOrig.method && !txMethodTouched) method = null;
       var cardId = (document.getElementById("txCardBlock").style.display !== "none")
         ? (document.getElementById("txCard").value || null) : null;
       if(cardId && cardId.indexOf("debit:") === 0){
@@ -1613,16 +1762,187 @@
       }
       var epayPlatformId = (document.getElementById("txEpayBlock").style.display !== "none")
         ? (document.getElementById("txEpayPlatform").value || null) : null;
-      state.transactions.push({
-        id: uid(), type: txType, date: date, amount: amount,
-        accountId: accountId, method: method, category: category, note: note, cardId: cardId, epayPlatformId: epayPlatformId
-      });
+      rec = {
+        type: txType, date: date, amount: amount,
+        accountId: accountId, method: method, category: txCategory, note: note, cardId: cardId, epayPlatformId: epayPlatformId
+      };
+    }
+
+    var replaced = false;
+    if(editingTxId){
+      for(var i = 0; i < state.transactions.length; i++){
+        if(state.transactions[i].id === editingTxId){
+          rec.id = editingTxId;
+          state.transactions[i] = rec;
+          replaced = true;
+          break;
+        }
+      }
+    }
+    if(!replaced){
+      rec.id = uid();
+      state.transactions.push(rec);
     }
 
     saveState();
     closeTxModal();
     render();
   });
+
+  // ---------- Options manager (categories / e-pay platforms) ----------
+
+  var manageOverlay = document.getElementById("manageOverlay");
+  var manageTab = "expense";
+
+  function showManageError(msg){
+    var el = document.getElementById("manageError");
+    el.textContent = msg || "";
+    el.style.display = msg ? "block" : "none";
+  }
+
+  function platformRowsHtml(){
+    if(!state.epayPlatforms.length) return '<p class="sum-note">目前沒有電子支付平台，可以在下方新增。</p>';
+    function row(p){
+      return '<div class="manage-row">' +
+        '<input type="text" data-pname="' + p.id + '" value="' + escapeHtml(p.name) + '">' +
+        '<label class="show-opt"><input type="checkbox" data-pvis="' + p.id + '" style="width:auto;margin:0;"' + (p.hidden ? '' : ' checked') + '> 顯示</label>' +
+        '<button type="button" class="row-del" data-pdel="' + p.id + '" title="刪除">✕</button>' +
+      '</div>';
+    }
+    var visible = state.epayPlatforms.filter(function(p){ return !p.hidden; });
+    var hidden = state.epayPlatforms.filter(function(p){ return p.hidden; });
+    var html = visible.map(row).join("");
+    if(hidden.length) html += '<p class="sum-note" style="margin:12px 0 8px;">已隱藏</p>' + hidden.map(row).join("");
+    return html;
+  }
+
+  function renderManage(){
+    Array.prototype.forEach.call(document.getElementById("manageSeg").children, function(b){
+      b.classList.toggle("active", b.getAttribute("data-tab") === manageTab);
+    });
+    var isPlat = manageTab === "platform";
+    var kind = manageTab === "income" ? "收入" : "支出";
+    document.getElementById("manageNote").textContent = isPlat
+      ? "取消勾選「顯示」可以先把平台從選單中隱藏，之後需要時再勾回來。"
+      : "修改名稱時，已記錄的" + kind + "也會跟著改成新名稱；刪除只是移除按鈕，舊紀錄不受影響。";
+    document.getElementById("manageNewName").placeholder = isPlat ? "新增電子支付平台" : "新增" + kind + "分類";
+
+    var wrap = document.getElementById("manageList");
+    if(isPlat){
+      wrap.innerHTML = platformRowsHtml();
+    } else {
+      var cats = catsFor(manageTab);
+      wrap.innerHTML = cats.length ? cats.map(function(c, i){
+        return '<div class="manage-row">' +
+          '<input type="text" data-catidx="' + i + '" value="' + escapeHtml(c) + '">' +
+          '<button type="button" class="row-del" data-catdel="' + i + '" title="刪除">✕</button>' +
+        '</div>';
+      }).join("") : '<p class="sum-note">目前沒有分類，可以在下方新增。</p>';
+    }
+
+    wrap.querySelectorAll("[data-catidx]").forEach(function(inp){
+      inp.addEventListener("change", function(){ renameCategory(parseInt(inp.getAttribute("data-catidx"), 10), inp); });
+    });
+    wrap.querySelectorAll("[data-catdel]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        catsFor(manageTab).splice(parseInt(btn.getAttribute("data-catdel"), 10), 1);
+        saveState(); showManageError(""); renderManage(); renderCatChips();
+      });
+    });
+    wrap.querySelectorAll("[data-pname]").forEach(function(inp){
+      inp.addEventListener("change", function(){
+        var pl = getEpayPlatform(inp.getAttribute("data-pname"));
+        if(!pl) return;
+        var name = inp.value.trim();
+        if(!name || name === pl.name){ inp.value = pl.name; return; }
+        if(state.epayPlatforms.some(function(o){ return o.id !== pl.id && o.name === name; })){
+          inp.value = pl.name; showManageError("已經有「" + name + "」這個平台了。"); return;
+        }
+        pl.name = name; saveState(); showManageError(""); render();
+      });
+    });
+    wrap.querySelectorAll("[data-pvis]").forEach(function(cb){
+      cb.addEventListener("change", function(){
+        var pl = getEpayPlatform(cb.getAttribute("data-pvis"));
+        if(pl){ pl.hidden = !cb.checked; saveState(); renderManage(); }
+      });
+    });
+    wrap.querySelectorAll("[data-pdel]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var id = btn.getAttribute("data-pdel");
+        if(!confirm("確定要刪除這個支付平台嗎？已記錄的支出仍會保留，只是不再歸屬這個平台。")) return;
+        state.epayPlatforms = state.epayPlatforms.filter(function(pl){ return pl.id !== id; });
+        state.transactions.forEach(function(t){ if(t.epayPlatformId === id) t.epayPlatformId = null; });
+        saveState(); showManageError(""); renderManage(); render();
+      });
+    });
+  }
+
+  function renameCategory(i, inp){
+    var arr = catsFor(manageTab);
+    var oldName = arr[i];
+    var newName = inp.value.trim();
+    if(!newName || newName === oldName){ inp.value = oldName; return; }
+    if(arr.indexOf(newName) !== -1){
+      inp.value = oldName; showManageError("已經有「" + newName + "」這個分類了。"); return;
+    }
+    arr[i] = newName;
+    state.transactions.forEach(function(t){
+      if(t.type === manageTab && t.category === oldName) t.category = newName;
+    });
+    if(txCategory === oldName && txType === manageTab) txCategory = newName;
+    saveState(); showManageError(""); renderCatChips(); render();
+  }
+
+  function addManageItem(){
+    var input = document.getElementById("manageNewName");
+    var name = input.value.trim();
+    if(!name) return;
+    if(manageTab === "platform"){
+      if(state.epayPlatforms.some(function(o){ return o.name === name; })){
+        showManageError("已經有「" + name + "」這個平台了。"); return;
+      }
+      state.epayPlatforms.push({ id: uid(), name: name, hidden: false });
+    } else {
+      var arr = catsFor(manageTab);
+      if(arr.indexOf(name) !== -1){
+        showManageError("已經有「" + name + "」這個分類了。"); return;
+      }
+      arr.push(name);
+    }
+    input.value = "";
+    showManageError("");
+    saveState(); renderManage(); renderCatChips();
+  }
+
+  function openManageModal(){
+    manageTab = txType === "income" ? "income" : "expense";
+    showManageError("");
+    document.getElementById("manageNewName").value = "";
+    renderManage();
+    manageOverlay.classList.add("open");
+  }
+
+  function closeManageModal(){
+    manageOverlay.classList.remove("open");
+    showManageError("");
+    if(document.getElementById("txEpayBlock").style.display !== "none") populateEpayPlatformSelect();
+    renderCatChips();
+  }
+
+  document.getElementById("manageSeg").addEventListener("click", function(e){
+    var btn = e.target.closest("button[data-tab]");
+    if(!btn) return;
+    manageTab = btn.getAttribute("data-tab");
+    showManageError("");
+    renderManage();
+  });
+  document.getElementById("manageAddBtn").addEventListener("click", addManageItem);
+  document.getElementById("manageNewName").addEventListener("keydown", function(e){
+    if(e.key === "Enter"){ e.preventDefault(); addManageItem(); }
+  });
+  document.getElementById("manageClose").addEventListener("click", closeManageModal);
+  manageOverlay.addEventListener("click", function(e){ if(e.target === manageOverlay) closeManageModal(); });
 
   // ---------- Account modal ----------
 
@@ -1654,12 +1974,11 @@
       document.getElementById("acctIsPayroll").checked = false;
       document.getElementById("acctHasDebit").checked = false;
     }
-    document.getElementById("acctSavingsRow").style.display = isWallet ? "none" : "flex";
+    document.getElementById("acctTypeBlock").style.display = isWallet ? "none" : "block";
     document.getElementById("acctRateBlock").style.display = document.getElementById("acctIsSavings").checked ? "block" : "none";
-    document.getElementById("acctSettlementRow").style.display = isWallet ? "none" : "flex";
     document.getElementById("acctSettlementNote").style.display = document.getElementById("acctIsSettlement").checked ? "block" : "none";
-    document.getElementById("acctPayrollRow").style.display = isWallet ? "none" : "flex";
-    document.getElementById("acctDebitRow").style.display = isWallet ? "none" : "flex";
+    updateAcctTypeSummary();
+    setAcctTypePanel(false);
     acctOverlay.classList.add("open");
   }
   function closeAccountModal(){ acctOverlay.classList.remove("open"); }
@@ -1669,6 +1988,31 @@
   });
   document.getElementById("acctIsSettlement").addEventListener("change", function(){
     document.getElementById("acctSettlementNote").style.display = this.checked ? "block" : "none";
+  });
+
+  // 帳戶類型下拉選單（可複選）：按鈕上顯示已選的類型
+  var ACCT_TYPE_LABELS = [
+    ["acctIsSavings", "存錢帳戶"], ["acctIsSettlement", "交割戶"],
+    ["acctIsPayroll", "薪轉戶"], ["acctHasDebit", "簽帳金融卡"]
+  ];
+  function updateAcctTypeSummary(){
+    var picked = ACCT_TYPE_LABELS.filter(function(p){ return document.getElementById(p[0]).checked; })
+      .map(function(p){ return p[1]; });
+    document.getElementById("acctTypeSummary").textContent = picked.length ? picked.join("、") : "一般帳戶";
+  }
+  function setAcctTypePanel(open){
+    document.getElementById("acctTypePanel").style.display = open ? "block" : "none";
+    document.getElementById("acctTypeBtn").setAttribute("aria-expanded", open ? "true" : "false");
+  }
+  document.getElementById("acctTypeBtn").addEventListener("click", function(){
+    setAcctTypePanel(document.getElementById("acctTypePanel").style.display === "none");
+  });
+  document.getElementById("acctTypePanel").addEventListener("change", updateAcctTypeSummary);
+  document.addEventListener("click", function(e){
+    if(!document.getElementById("acctTypeDd").contains(e.target)) setAcctTypePanel(false);
+  });
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape") setAcctTypePanel(false);
   });
 
   document.getElementById("acctCancel").addEventListener("click", closeAccountModal);

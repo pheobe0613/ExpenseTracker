@@ -846,7 +846,14 @@
   var STORAGE_KEY = "ledger-app-v1";
   var WALLET_ID = "wallet";
 
-  var EXPENSE_CATS = ["餐飲","交通","購物","娛樂","帳單","醫療","其他"];
+  var EXPENSE_CATS = ["餐飲","交通","購物","娛樂","帳單","醫療","卡費","其他"];
+  // 刷信用卡(有 cardId 的刷卡/電子支付)不計入當日支出；分類為「卡費」才計入
+  function countsAsSpend(tx){
+    if(tx.type !== "expense") return false;
+    if(tx.category === "卡費") return true;
+    if(tx.cardId && (tx.method === "card" || tx.method === "epay")) return false;
+    return true;
+  }
   var INCOME_CATS = ["薪資","獎金","利息","其他"];
 
   var state = loadState();
@@ -873,6 +880,10 @@
           if(!Array.isArray(parsed.cards)) parsed.cards = [];
           if(!Array.isArray(parsed.epayPlatforms)) parsed.epayPlatforms = defaultEpayPlatforms();
           if(!Array.isArray(parsed.expenseCats)) parsed.expenseCats = EXPENSE_CATS.slice();
+          if(parsed.expenseCats.indexOf("卡費") < 0){
+            var oi = parsed.expenseCats.indexOf("其他");
+            if(oi < 0) parsed.expenseCats.push("卡費"); else parsed.expenseCats.splice(oi, 0, "卡費");
+          }
           if(!Array.isArray(parsed.incomeCats)) parsed.incomeCats = INCOME_CATS.slice();
           // 舊版曾替「簽帳金融卡」自動建立卡片；現在只在帳戶上保留標記
           var autoCards = parsed.cards.filter(function(c){ return c.linkedAccountId; });
@@ -1001,7 +1012,7 @@
     state.transactions.forEach(function(tx){
       if(tx.date !== dateStr) return;
       if(tx.type === "income") totals.income += tx.amount;
-      if(tx.type === "expense") totals.expense += tx.amount;
+      if(countsAsSpend(tx)) totals.expense += tx.amount;
     });
     return totals;
   }
@@ -1076,7 +1087,7 @@
   function expenseTotals(filterFn){
     var totals = {all:0, cash:0, card:0, epay:0};
     state.transactions.forEach(function(tx){
-      if(tx.type === "expense" && filterFn(tx)){
+      if(countsAsSpend(tx) && filterFn(tx)){
         totals.all += tx.amount;
         totals[tx.method] = (totals[tx.method]||0) + tx.amount;
       }
@@ -1279,13 +1290,13 @@
     var txs = state.transactions.filter(function(tx){
       return tx.type !== "transfer" && yearMonth(tx.date) === thisMonth;
     }).sort(byDateDesc);
-    var expenses = txs.filter(function(tx){ return tx.type === "expense"; });
+    var expenses = txs.filter(countsAsSpend);
     var total = expenses.reduce(function(sum, tx){ return sum + tx.amount; }, 0);
 
     var html = '<div class="acct-header"><div>' +
       '<h2>' + monthLabel + ' 支出</h2>' +
       '<div class="acct-header-balance">' + fmt(total) + '</div>' +
-      '<div class="sum-note">不含帳戶間轉帳</div>' +
+      '<div class="sum-note">不含帳戶間轉帳與刷信用卡（卡費除外）</div>' +
     '</div></div>';
 
     // pie chart: expenses grouped by category

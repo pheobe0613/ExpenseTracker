@@ -1576,7 +1576,7 @@
     document.getElementById("txModalTitle").textContent = tx ? "編輯紀錄" : "新增紀錄";
     txType = tx ? tx.type : "expense";
     txCategory = (tx && !isTransferTx) ? (tx.category || "") : "";
-    document.getElementById("txDate").value = tx ? tx.date : todayStr();
+    document.getElementById("txDate").value = tx ? tx.date : ((selectedDay && selectedDay < todayStr()) ? selectedDay : todayStr());
     document.getElementById("txAmount").value = tx ? tx.amount : "";
     document.getElementById("txNote").value = tx ? (tx.note || "") : "";
     document.getElementById("txEpayPlatform").value = "";

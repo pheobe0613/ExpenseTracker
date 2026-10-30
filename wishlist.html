@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>許願購物清單</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg1:#EAF2FF;
+    --bg2:#F1EAFF;
+    --bg3:#FFEFF5;
+    --glass:rgba(255,255,255,0.50);
+    --glass-strong:rgba(255,255,255,0.72);
+    --glass-input:rgba(255,255,255,0.60);
+    --glass-border:rgba(255,255,255,0.70);
+    --hairline:rgba(31,39,51,0.09);
+    --ink:#1F2733;
+    --ink-soft:#4C5566;
+    --ink-faint:#7C8698;
+    --red:#D9564A;
+    --green:#2E9E67;
+    --brass:#BD8A3F;
+    --navy:#3E6FD9;
+    --teal:#1F9C92;
+    --radius:18px;
+    --radius-sm:12px;
+    --shadow:0 10px 32px rgba(31,45,80,.14);
+    --font-serif:'Source Serif 4','Noto Serif TC',serif;
+    --font-sans:'Inter','PingFang TC','Microsoft JhengHei',sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg1:#0C1220;
+      --bg2:#181030;
+      --bg3:#1B0F22;
+      --glass:rgba(32,38,54,0.55);
+      --glass-strong:rgba(32,38,54,0.76);
+      --glass-input:rgba(32,38,54,0.55);
+      --glass-border:rgba(255,255,255,0.12);
+      --hairline:rgba(255,255,255,0.12);
+      --ink:#EDEFF4;
+      --ink-soft:#C4CAD6;
+      --ink-faint:#8B93A3;
+      --red:#F0897C;
+      --green:#72D9A4;
+      --brass:#E4BB7E;
+      --navy:#8FB2FF;
+      --teal:#7BE3D6;
+      --shadow:0 10px 32px rgba(0,0,0,.5);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg1:#0C1220;
+    --bg2:#181030;
+    --bg3:#1B0F22;
+    --glass:rgba(32,38,54,0.55);
+    --glass-strong:rgba(32,38,54,0.76);
+    --glass-input:rgba(32,38,54,0.55);
+    --glass-border:rgba(255,255,255,0.12);
+    --hairline:rgba(255,255,255,0.12);
+    --ink:#EDEFF4;
+    --ink-soft:#C4CAD6;
+    --ink-faint:#8B93A3;
+    --red:#F0897C;
+    --green:#72D9A4;
+    --brass:#E4BB7E;
+    --navy:#8FB2FF;
+    --teal:#7BE3D6;
+    --shadow:0 10px 32px rgba(0,0,0,.5);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 12% 10%, var(--bg1), transparent 55%),
+      radial-gradient(circle at 88% 18%, var(--bg2), transparent 55%),
+      radial-gradient(circle at 50% 95%, var(--bg3), transparent 60%),
+      var(--bg1);
+    background-attachment:fixed;
+    color:var(--ink);
+    font-family:var(--font-sans);
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;}
+  }
+  a{color:inherit;}
+  button{font:inherit;color:inherit;}
+  .wrap{max-width:820px;margin:0 auto;padding:20px 16px 100px;}
+
+  /* ---------- Masthead ---------- */
+  .masthead{
+    background:linear-gradient(135deg, rgba(38,49,71,.72), rgba(63,86,133,.58));
+    backdrop-filter:blur(22px);
+    -webkit-backdrop-filter:blur(22px);
+    border:1px solid var(--glass-border);
+    box-shadow:var(--shadow);
+    color:#F3F5FA;
+    border-radius:var(--radius);
+    padding:22px 22px 20px;
+    margin-bottom:14px;
+  }
+  .masthead-inner{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    flex-wrap:wrap;
+    gap:14px;
+  }
+  .brand{display:flex;align-items:center;gap:12px;}
+  .brand-mark{font-size:28px;line-height:1;}
+  .brand h1{
+    font-family:var(--font-serif);
+    font-size:21px;
+    font-weight:600;
+    margin:0 0 2px;
+    letter-spacing:.2px;
+  }
+  .brand .tagline{margin:0;font-size:12.5px;color:rgba(243,245,250,.72);}
+  .networth{text-align:right;margin-left:auto;}
+  .networth-label{display:block;font-size:11.5px;color:rgba(243,245,250,.62);margin-bottom:2px;}
+  .networth-value{
+    font-family:var(--font-serif);
+    font-size:30px;
+    font-weight:700;
+    font-variant-numeric:tabular-nums;
+  }
+
+  /* 手機：品牌在上、總額獨立一列靠左，避免總額換行後縮成半邊又靠右 */
+  @media (max-width:600px){
+    .masthead-inner{flex-direction:column;align-items:stretch;gap:12px;}
+    .networth{margin-left:0;text-align:left;padding-top:12px;border-top:1px solid rgba(243,245,250,.18);}
+    .networth-value{font-size:clamp(19px,6vw,26px);}
+    .nw-part{white-space:nowrap;}
+  }
+
+  /* ---------- Site nav ---------- */
+  .site-links{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+  .site-link{
+    font-size:12.5px;font-weight:600;
+    padding:6px 13px;border-radius:999px;
+    background:var(--glass-input);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    border:1px solid var(--glass-border);
+    color:var(--ink-soft);
+    text-decoration:none;
+  }
+  .site-link.active{background:var(--glass-strong);color:var(--ink);border-color:var(--ink);}
+
+  /* ---------- Tabs ---------- */
+  .tabs{
+    display:flex;
+    gap:6px;
+    overflow-x:auto;
+    padding-bottom:2px;
+    margin-bottom:16px;
+    scrollbar-width:none;
+    -ms-overflow-style:none;
+  }
+  .tabs::-webkit-scrollbar,
+  .ledger-wrap::-webkit-scrollbar,
+  .modal::-webkit-scrollbar{
+    display:none;
+    width:0;
+    height:0;
+  }
+  .tab-btn{
+    flex:0 0 auto;
+    background:var(--glass);
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+    border:1px solid var(--glass-border);
+    border-bottom:3px solid var(--glass-border);
+    color:var(--ink-soft);
+    font-family:var(--font-sans);
+    font-size:13.5px;
+    font-weight:600;
+    padding:8px 14px;
+    border-radius:var(--radius-sm) var(--radius-sm) 0 0;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .tab-btn.active{
+    color:var(--ink);
+    border-bottom-color:var(--teal);
+    background:var(--glass-strong);
+  }
+  .tab-btn.add-tab{color:var(--navy); border-style:dashed;}
+  .tab-btn:focus-visible{outline:2px solid var(--navy); outline-offset:1px;}
+
+  /* ---------- Cards ---------- */
+  .card{
+    background:var(--glass);
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+    border:1px solid var(--glass-border);
+    box-shadow:var(--shadow);
+    border-radius:var(--radius);
+    padding:16px;
+  }
+  .section-title{
+    font-family:var(--font-serif);
+    font-size:15px;
+    font-weight:600;
+    margin:0 0 10px;
+  }
+  .empty-state{
+    text-align:center;
+    padding:30px 10px;
+    color:var(--ink-faint);
+    font-size:13.5px;
+  }
+
+  /* ---------- Goal cards ---------- */
+  .goal-card{
+    background:var(--glass);
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+    border:1px solid var(--glass-border);
+    box-shadow:var(--shadow);
+    border-radius:var(--radius);
+    padding:16px;
+    margin-bottom:12px;
+    cursor:pointer;
+    text-align:left;
+    width:100%;
+    display:block;
+  }
+  .goal-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+  .goal-name{font-family:var(--font-serif);font-size:16.5px;font-weight:600;}
+  .goal-meta{font-size:11.5px;color:var(--ink-faint);margin-top:3px;}
+  .goal-pct{
+    font-family:var(--font-serif);font-size:21px;font-weight:700;
+    color:var(--navy);white-space:nowrap;
+  }
+  .goal-pct.done{color:var(--green);}
+  .goal-bar-track{
+    width:100%;height:10px;border-radius:999px;
+    background:var(--glass-input);
+    border:1px solid var(--glass-border);
+    overflow:hidden;
+    margin:12px 0 8px;
+  }
+  .goal-bar-fill{
+    height:100%;border-radius:999px;
+    background:linear-gradient(90deg, var(--navy), var(--teal));
+  }
+  .goal-bar-fill.done{background:linear-gradient(90deg, var(--green), var(--teal));}
+  .goal-amounts{
+    display:flex;justify-content:space-between;
+    font-size:12.5px;color:var(--ink-soft);
+    font-variant-numeric:tabular-nums;
+  }
+  .goal-amounts .target{color:var(--ink-faint);}
+  .goal-actions{display:flex;justify-content:flex-end;margin-top:10px;}
+  .quick-deposit-btn{
+    background:var(--glass-strong);
+    border:1px solid var(--glass-border);
+    border-radius:999px;
+    color:var(--navy);
+    font-size:12px;font-weight:600;
+    padding:6px 13px;cursor:pointer;
+  }
+  .goal-badge{
+    display:inline-flex;align-items:center;gap:4px;
+    font-size:11px;padding:2px 9px;border-radius:999px;
+    background:var(--glass-input);border:1px solid var(--glass-border);
+    color:var(--green);margin-top:6px;
+  }
+
+  /* ---------- Goal detail header ---------- */
+  .goal-header{margin-bottom:16px;}
+  .goal-header h2{
+    font-family:var(--font-serif);
+    font-size:21px;margin:0 0 2px;
+  }
+  .goal-header .goal-meta{margin-bottom:12px;}
+  .goal-header-card{
+    background:var(--glass);
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+    border:1px solid var(--glass-border);
+    box-shadow:var(--shadow);
+    border-radius:var(--radius);
+    padding:18px;
+    margin-bottom:18px;
+  }
+  .goal-header-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;}
+  .goal-big-pct{
+    font-family:var(--font-serif);font-size:30px;font-weight:700;
+    color:var(--navy);
+  }
+  .goal-big-pct.done{color:var(--green);}
+  .header-actions{display:flex;gap:6px;}
+  .icon-btn{
+    background:var(--glass-input);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    border:1px solid var(--glass-border);
+    border-radius:var(--radius-sm);
+    color:var(--ink-soft);
+    padding:6px 10px;font-size:12.5px;cursor:pointer;
+    font-family:var(--font-sans);
+  }
+  .icon-btn:hover{border-color:var(--ink-soft);}
+  .icon-btn.danger:hover{color:var(--red);border-color:var(--red);}
+
+  /* ---------- Ledger table ---------- */
+  .ledger-wrap{overflow-x:auto; scrollbar-width:none; -ms-overflow-style:none;}
+  table.ledger{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13.5px;
+    min-width:420px;
+  }
+  table.ledger th{
+    text-align:left;
+    font-size:11px;
+    color:var(--ink-faint);
+    font-weight:600;
+    padding:6px 8px;
+    border-bottom:1px solid var(--hairline);
+    white-space:nowrap;
+  }
+  table.ledger td{
+    padding:9px 8px;
+    border-bottom:1px solid var(--hairline);
+    vertical-align:top;
+  }
+  table.ledger tr:last-child td{border-bottom:none;}
+  .num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .num.out{color:var(--red);}
+  .num.in{color:var(--green);}
+  .num.bal{color:var(--ink-soft);}
+  .memo-main{font-weight:600;}
+  .memo-sub{font-size:11.5px;color:var(--ink-faint);margin-top:1px;}
+  .row-del{
+    background:none;border:none;color:var(--ink-faint);
+    cursor:pointer;font-size:12px;padding:2px 4px;
+  }
+  .row-del:hover{color:var(--red);}
+
+  /* ---------- FAB ---------- */
+  .fab{
+    position:fixed;
+    right:20px;bottom:20px;
+    width:56px;height:56px;
+    border-radius:50%;
+    background:linear-gradient(135deg, var(--navy), #6D93E8);
+    color:#FFFFFF;
+    border:1px solid rgba(255,255,255,.5);
+    font-size:26px;
+    box-shadow:0 10px 26px rgba(62,111,217,.45);
+    cursor:pointer;
+    z-index:20;
+  }
+  .fab:focus-visible{outline:3px solid var(--navy);outline-offset:2px;}
+
+  /* ---------- Modal ---------- */
+  .overlay{
+    position:fixed;inset:0;
+    background:rgba(20,26,38,.35);
+    backdrop-filter:blur(2px);
+    -webkit-backdrop-filter:blur(2px);
+    display:none;
+    align-items:flex-end;
+    justify-content:center;
+    z-index:30;
+  }
+  .overlay.open{display:flex;}
+  @media (min-width:600px){
+    .overlay{align-items:center;}
+  }
+  .modal{
+    background:var(--glass-strong);
+    backdrop-filter:blur(26px);
+    -webkit-backdrop-filter:blur(26px);
+    border:1px solid var(--glass-border);
+    box-shadow:var(--shadow);
+    width:100%;
+    max-width:440px;
+    box-sizing:border-box;
+    border-radius:var(--radius) var(--radius) 0 0;
+    padding:20px;
+    max-height:88vh;
+    overflow-y:auto;
+    overflow-x:hidden;
+    scrollbar-width:none;
+    -ms-overflow-style:none;
+  }
+  @media (min-width:600px){
+    .modal{border-radius:var(--radius);}
+  }
+  .modal h3{
+    font-family:var(--font-serif);
+    font-size:17px;margin:0 0 14px;
+  }
+  .seg{
+    display:flex;
+    background:var(--glass-input);
+    border:1px solid var(--glass-border);
+    border-radius:var(--radius-sm);
+    overflow:hidden;
+    margin-bottom:14px;
+  }
+  .seg button{
+    flex:1;
+    padding:9px 6px;
+    border:none;
+    background:transparent;
+    color:var(--ink-soft);
+    font-family:var(--font-sans);
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    border-right:1px solid var(--glass-border);
+  }
+  .seg button:last-child{border-right:none;}
+  .seg button.active{background:var(--ink);color:#fff;}
+  label{
+    display:block;font-size:12px;color:var(--ink-soft);
+    margin:12px 0 5px;
+  }
+  input[type=text],input[type=number],input[type=date]{
+    width:100%;
+    max-width:100%;
+    min-width:0;
+    padding:9px 10px;
+    border:1px solid var(--glass-border);
+    border-radius:var(--radius-sm);
+    background:var(--glass-input);
+    color:var(--ink);
+    font-family:var(--font-sans);
+    font-size:16px;
+    box-sizing:border-box;
+  }
+  input[type=date]{
+    -webkit-appearance:none;
+    appearance:none;
+  }
+  input:focus-visible,button:focus-visible{
+    outline:2px solid var(--navy);outline-offset:1px;
+  }
+  .modal-actions{display:flex;gap:8px;margin-top:18px;}
+  .btn{
+    flex:1;padding:11px;border-radius:var(--radius-sm);
+    font-family:var(--font-sans);font-size:14px;font-weight:600;
+    cursor:pointer;border:1px solid var(--glass-border);
+    background:var(--glass-input);color:var(--ink-soft);
+  }
+  .btn.primary{background:var(--ink);color:#fff;border-color:var(--ink);}
+  .btn.danger{color:var(--red);border-color:var(--red);}
+  .field-error{color:var(--red);font-size:12px;margin-top:6px;display:none;}
+  .field-hint{color:var(--ink-faint);font-size:11.5px;margin-top:4px;}
+
+  textarea{
+    width:100%;max-width:100%;min-width:0;min-height:120px;resize:vertical;
+    padding:9px 10px;border:1px solid var(--glass-border);border-radius:var(--radius-sm);
+    background:var(--glass-input);color:var(--ink);font-family:var(--font-sans);font-size:16px;
+    box-sizing:border-box;-webkit-appearance:none;appearance:none;
+  }
+  .wl-toolbar{display:flex;margin-bottom:16px;}
+  .wl-toolbar .btn{flex:1;}
+  .wl-grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));}
+  .wl-card{
+    background:var(--glass);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+    border:1px solid var(--glass-border);box-shadow:var(--shadow);
+    border-radius:var(--radius);padding:16px;
+  }
+  .wl-head{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;}
+  .wl-title{flex:1;margin:0;font-family:var(--font-serif);font-size:18px;font-weight:600;word-break:break-word;}
+  .wl-count{font-size:12px;color:var(--ink-faint);margin:0 0 8px;}
+  .wl-edit{border:1px solid var(--glass-border);background:var(--glass-input);border-radius:50%;width:30px;height:30px;cursor:pointer;color:var(--ink-soft);flex:0 0 auto;}
+  .wl-items{list-style:none;margin:0;padding:0;}
+  .wl-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--hairline);cursor:pointer;font-size:15px;}
+  .wl-item input{width:18px;height:18px;flex:0 0 auto;margin:0;accent-color:var(--teal);}
+  .wl-item span{word-break:break-word;}
+  .wl-item.done span{text-decoration:line-through;color:var(--ink-faint);}
+  .wl-thumb{width:44px;height:44px;border-radius:10px;object-fit:cover;flex:0 0 auto;border:1px solid var(--glass-border);cursor:zoom-in;}
+  .wl-item .wl-name{flex:1;}
+  .it-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+  .it-row input[type=text]{flex:1;}
+  .it-pic{width:44px;height:44px;border-radius:10px;flex:0 0 auto;border:1px dashed var(--ink-faint);background:var(--glass-input);
+    background-size:cover;background-position:center;cursor:pointer;color:var(--ink-faint);font-size:18px;padding:0;}
+  .it-row input.it-price{flex:0 0 84px;width:84px;}
+  .wl-price{font-variant-numeric:tabular-nums;color:var(--ink-soft);font-size:14px;flex:0 0 auto;}
+  .wl-total{font-size:13px;color:var(--ink-soft);margin:0 0 8px;font-variant-numeric:tabular-nums;}
+  .wl-pin{border:1px solid var(--glass-border);background:var(--glass-input);border-radius:50%;width:30px;height:30px;cursor:pointer;flex:0 0 auto;filter:grayscale(1);opacity:.6;}
+  .wl-pin.on{filter:none;opacity:1;background:var(--glass-strong);border-color:var(--brass);}
+  .it-del{border:none;background:none;color:var(--ink-faint);font-size:18px;cursor:pointer;flex:0 0 auto;padding:4px;}
+  .it-list{max-height:42vh;overflow:auto;}
+  .it-add{width:100%;margin-top:4px;flex:none;}
+  #lightbox{position:fixed;inset:0;background:rgba(10,14,22,.8);display:none;align-items:center;justify-content:center;z-index:50;padding:20px;}
+  #lightbox.open{display:flex;}
+  #lightbox img{max-width:100%;max-height:100%;border-radius:12px;}
+  .btn.primary{
+    background:linear-gradient(135deg, rgba(62,111,217,.22), rgba(31,156,146,.22));
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    color:var(--navy);border-color:rgba(62,111,217,.35);
+  }
+  .btn.primary:active{background:linear-gradient(135deg, rgba(62,111,217,.34), rgba(31,156,146,.34));}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="masthead-inner">
+      <div class="brand">
+        <span class="brand-mark">🛍️</span>
+        <div>
+          <h1>許願購物清單</h1>
+          <p class="tagline">把想買的東西列成清單，買到就打勾</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <nav class="site-links">
+    <a href="index.html" class="site-link">🧾 記帳本</a>
+    <a href="goals.html" class="site-link">🎯 存錢目標</a>
+    <a href="investing.html" class="site-link">📈 投資紀錄</a>
+    <a href="wishlist.html" class="site-link active">🛍️ 許願清單</a>
+  </nav>
+
+  <div class="wl-toolbar"><button type="button" class="btn primary" id="addListBtn">＋ 新增清單</button></div>
+
+  <main id="mainView"></main>
+</div>
+
+<div class="overlay" id="listOverlay">
+  <div class="modal">
+    <h3 id="listModalTitle">新增清單</h3>
+    <label for="listName">清單名稱</label>
+    <input type="text" id="listName" placeholder="例如：生日禮物、居家用品">
+    <label>清單內容（一項一列，可附圖片）</label>
+    <div class="it-list" id="itemRows"></div>
+    <button type="button" class="btn it-add" id="addItemBtn">＋ 新增項目</button>
+    <input type="file" id="picFile" accept="image/*" style="display:none;">
+    <p class="field-error" id="listError"></p>
+    <div class="modal-actions">
+      <button class="btn danger" id="listDelete" style="display:none;">刪除</button>
+      <button class="btn" id="listCancel">取消</button>
+      <button class="btn primary" id="listSave">儲存</button>
+    </div>
+  </div>
+</div>
+
+<div id="lightbox"><img alt=""></div>
+
+<script>
+(function(){
+  "use strict";
+  var KEY = "wishlist-app-v1";
+  var lists = load();
+  var editingId = null;
+
+  function load(){
+    try{
+      var p = JSON.parse(localStorage.getItem(KEY));
+      if(p && Array.isArray(p.lists)) return p.lists;
+    }catch(e){}
+    return [];
+  }
+  function save(){ try{ localStorage.setItem(KEY, JSON.stringify({lists: lists})); return true; }catch(e){ alert("儲存失敗：圖片太多或太大，瀏覽器空間不足。請移除一些圖片。"); return false; } }
+  function uid(){ return "w" + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+  function esc(s){ return String(s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+  function money(n){ return "NT$ " + Math.round(n).toLocaleString("zh-Hant-TW"); }
+  function byId(id){ return lists.filter(function(l){ return l.id === id; })[0]; }
+
+  function render(){
+    var main = document.getElementById("mainView");
+    if(!lists.length){
+      main.innerHTML = '<div class="card empty-state">還沒有購物清單，點上方「＋ 新增清單」開始許願。</div>';
+      return;
+    }
+    var shown = lists.filter(function(l){ return l.pinned; }).concat(lists.filter(function(l){ return !l.pinned; }));
+    main.innerHTML = '<div class="wl-grid">' + shown.map(function(l){
+      var done = l.items.filter(function(i){ return i.done; }).length;
+      var total = 0, left = 0;
+      l.items.forEach(function(i){ var p = +i.price || 0; total += p; if(!i.done) left += p; });
+      return '<section class="wl-card"><div class="wl-head"><h2 class="wl-title">' + esc(l.name) + '</h2>' +
+        '<button type="button" class="wl-pin' + (l.pinned ? ' on' : '') + '" data-pin="' + l.id + '" aria-label="' + (l.pinned ? '取消置頂' : '置頂') + '" title="' + (l.pinned ? '取消置頂' : '置頂') + '">📌</button>' +
+        '<button type="button" class="wl-edit" data-edit="' + l.id + '" aria-label="編輯清單">✎</button></div>' +
+        '<p class="wl-count" style="margin-bottom:2px;">已買 ' + done + ' / ' + l.items.length + '</p>' +
+        '<p class="wl-total">總金額 <strong>' + money(total) + '</strong>' + (done && left !== total ? '　待買 ' + money(left) : '') + '</p>' +
+        (l.items.length ? '<ul class="wl-items">' + l.items.map(function(it, i){
+          return '<li><label class="wl-item' + (it.done ? ' done' : '') + '" style="margin:0;font-size:15px;color:inherit;">' +
+            '<input type="checkbox" data-list="' + l.id + '" data-idx="' + i + '"' + (it.done ? ' checked' : '') + '>' +
+            (it.img ? '<img class="wl-thumb" src="' + it.img + '" data-zoom="1" alt="">' : '') +
+            '<span class="wl-name">' + esc(it.text) + '</span>' +
+            (+it.price ? '<span class="wl-price">' + money(+it.price) + '</span>' : '') + '</label></li>';
+        }).join("") + '</ul>' : '<p class="wl-count">這份清單還沒有項目。</p>') +
+      '</section>';
+    }).join("") + '</div>';
+    main.querySelectorAll("[data-pin]").forEach(function(b){
+      b.addEventListener("click", function(){
+        var l = byId(b.getAttribute("data-pin"));
+        if(!l) return;
+        l.pinned = !l.pinned;
+        save(); render();
+      });
+    });
+    main.querySelectorAll("[data-edit]").forEach(function(b){
+      b.addEventListener("click", function(){ openModal(b.getAttribute("data-edit")); });
+    });
+    main.querySelectorAll("img[data-zoom]").forEach(function(im){
+      im.addEventListener("click", function(e){
+        e.preventDefault(); e.stopPropagation();
+        var lb = document.getElementById("lightbox");
+        lb.querySelector("img").src = im.src; lb.classList.add("open");
+      });
+    });
+    main.querySelectorAll("input[data-list]").forEach(function(c){
+      c.addEventListener("change", function(){
+        var l = byId(c.getAttribute("data-list"));
+        if(!l) return;
+        l.items[+c.getAttribute("data-idx")].done = c.checked;
+        save(); render();
+      });
+    });
+  }
+
+  var overlay = document.getElementById("listOverlay");
+  var nameEl = document.getElementById("listName");
+  var rowsEl = document.getElementById("itemRows");
+  var picFile = document.getElementById("picFile");
+  var draft = [];
+  var picIdx = -1;
+  document.getElementById("lightbox").addEventListener("click", function(){ this.classList.remove("open"); });
+  function renderRows(focusLast){
+    rowsEl.innerHTML = draft.map(function(it, i){
+      return '<div class="it-row"><button type="button" class="it-pic" data-pic="' + i + '"' +
+        (it.img ? ' style="background-image:url(' + it.img + ');border-style:solid;"' : '') + ' aria-label="選擇圖片">' + (it.img ? '' : '🖼') + '</button>' +
+        '<input type="text" data-txt="' + i + '" value="' + esc(it.text) + '" placeholder="項目名稱">' +
+        '<input type="number" class="it-price" data-price="' + i + '" value="' + (it.price ? it.price : '') + '" inputmode="numeric" pattern="[0-9]*" min="0" step="1" placeholder="金額">' +
+        '<button type="button" class="it-del" data-rm="' + i + '" aria-label="移除">✕</button></div>';
+    }).join("");
+    rowsEl.querySelectorAll("[data-txt]").forEach(function(inp){
+      inp.addEventListener("input", function(){ draft[+inp.getAttribute("data-txt")].text = inp.value; });
+    });
+    rowsEl.querySelectorAll("[data-price]").forEach(function(inp){
+      inp.addEventListener("input", function(){ draft[+inp.getAttribute("data-price")].price = Math.max(0, parseFloat(inp.value) || 0); });
+    });
+    rowsEl.querySelectorAll("[data-rm]").forEach(function(b){
+      b.addEventListener("click", function(){ draft.splice(+b.getAttribute("data-rm"), 1); renderRows(); });
+    });
+    rowsEl.querySelectorAll("[data-pic]").forEach(function(b){
+      b.addEventListener("click", function(){
+        var i = +b.getAttribute("data-pic");
+        if(draft[i].img && confirm("移除這張圖片？（取消則更換圖片）")){ draft[i].img = null; renderRows(); return; }
+        picIdx = i; picFile.value = ""; picFile.click();
+      });
+    });
+    if(focusLast){ var all = rowsEl.querySelectorAll("[data-txt]"); if(all.length) all[all.length - 1].focus(); }
+  }
+  picFile.addEventListener("change", function(){
+    var f = picFile.files && picFile.files[0];
+    if(!f || picIdx < 0) return;
+    var idx = picIdx;
+    var url = URL.createObjectURL(f);
+    var im = new Image();
+    im.onload = function(){
+      var max = 480, sc = Math.min(1, max / Math.max(im.width, im.height));
+      var c = document.createElement("canvas");
+      c.width = Math.round(im.width * sc); c.height = Math.round(im.height * sc);
+      c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      if(draft[idx]){ draft[idx].img = c.toDataURL("image/jpeg", 0.75); renderRows(); }
+    };
+    im.onerror = function(){ URL.revokeObjectURL(url); alert("無法讀取這張圖片。"); };
+    im.src = url;
+  });
+  document.getElementById("addItemBtn").addEventListener("click", function(){
+    draft.push({ text: "", done: false, img: null, price: 0 }); renderRows(true);
+  });
+  var errEl = document.getElementById("listError");
+  function openModal(id){
+    editingId = id || null;
+    var l = id ? byId(id) : null;
+    document.getElementById("listModalTitle").textContent = l ? "編輯清單" : "新增清單";
+    nameEl.value = l ? l.name : "";
+    draft = l ? l.items.map(function(i){ return { text: i.text, done: !!i.done, img: i.img || null, price: +i.price || 0 }; }) : [{ text: "", done: false, img: null, price: 0 }];
+    renderRows();
+    document.getElementById("listDelete").style.display = l ? "" : "none";
+    errEl.style.display = "none";
+    overlay.classList.add("open");
+    nameEl.focus();
+  }
+  function closeModal(){ overlay.classList.remove("open"); editingId = null; }
+
+  document.getElementById("addListBtn").addEventListener("click", function(){ openModal(null); });
+  document.getElementById("listCancel").addEventListener("click", closeModal);
+  overlay.addEventListener("click", function(e){ if(e.target === overlay) closeModal(); });
+  document.getElementById("listSave").addEventListener("click", function(){
+    var name = nameEl.value.trim();
+    if(!name){ errEl.textContent = "請輸入清單名稱。"; errEl.style.display = "block"; return; }
+    var l = editingId ? byId(editingId) : null;
+    var items = draft.filter(function(d){ return d.text.trim(); }).map(function(d){
+      return { text: d.text.trim(), done: d.done, img: d.img || null, price: d.price || 0 };
+    });
+    var backup = JSON.stringify(lists);
+    if(l){ l.name = name; l.items = items; }
+    else lists.push({ id: uid(), name: name, items: items });
+    if(!save()){ lists = JSON.parse(backup); return; }
+    closeModal(); render();
+  });
+  document.getElementById("listDelete").addEventListener("click", function(){
+    if(!editingId || !confirm("確定要刪除這份清單嗎？")) return;
+    lists = lists.filter(function(l){ return l.id !== editingId; });
+    save(); closeModal(); render();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

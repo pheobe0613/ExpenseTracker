@@ -148,7 +148,7 @@
   }
 
   /* ---------- Site nav ---------- */
-  .site-links{display:flex;gap:8px;margin-bottom:16px;}
+  .site-links{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
   .site-link{
     font-size:12.5px;font-weight:600;
     padding:6px 13px;border-radius:999px;
@@ -622,6 +622,10 @@
     border-radius:50%;width:30px;height:30px;flex:0 0 auto;
     cursor:pointer;color:var(--ink-soft);font-size:13px;margin-top:14px;
   }
+  .tools-row{display:flex;gap:8px;margin:0 0 14px;}
+  .tools-row .btn{flex:1 1 0;padding:8px 6px;font-size:13px;white-space:nowrap;}
+  .search-results{max-height:50vh;overflow:auto;margin-top:12px;}
+  .search-results table.ledger{min-width:0;}
 </style>
 </head>
 <body>
@@ -647,7 +651,15 @@
     <a href="index.html" class="site-link active">🧾 記帳本</a>
     <a href="goals.html" class="site-link">🎯 存錢目標</a>
     <a href="investing.html" class="site-link">📈 投資紀錄</a>
+    <a href="wishlist.html" class="site-link">🛍️ 許願清單</a>
   </nav>
+
+  <div class="tools-row">
+    <button type="button" class="btn" id="searchBtn">🔍 搜尋紀錄</button>
+    <button type="button" class="btn" id="exportBtn">⬇ 匯出備份</button>
+    <button type="button" class="btn" id="importBtn">⬆ 匯入備份</button>
+    <input type="file" id="importFile" accept=".json,application/json" style="display:none;">
+  </div>
 
   <nav class="tabs" id="tabs"></nav>
 
@@ -656,6 +668,17 @@
 </div>
 
 <button class="fab" id="fabAdd" title="新增紀錄" aria-label="新增紀錄">＋</button>
+
+<!-- Search modal -->
+<div class="overlay" id="searchOverlay">
+  <div class="modal">
+    <h3>搜尋紀錄</h3>
+    <input type="search" id="searchInput" placeholder="關鍵字：分類、備註、帳戶、卡片、金額" style="width:100%;">
+    <p class="sum-note" id="searchCount" style="margin:8px 0 0;"></p>
+    <div class="search-results" id="searchResults"></div>
+    <div class="modal-actions"><button class="btn primary" id="searchClose">關閉</button></div>
+  </div>
+</div>
 
 <!-- Transaction modal -->
 <div class="overlay" id="txOverlay">
@@ -1297,6 +1320,17 @@
       '<h2>' + monthLabel + ' 支出</h2>' +
       '<div class="acct-header-balance">' + fmt(total) + '</div>' +
       '<div class="sum-note">不含帳戶間轉帳與刷信用卡（卡費除外）</div>' +
+      (function(){
+        var py = parseInt(thisMonth.slice(0,4),10), pm = parseInt(thisMonth.slice(5,7),10) - 1;
+        if(pm === 0){ pm = 12; py--; }
+        var prev = py + "-" + (pm < 10 ? "0" : "") + pm;
+        var prevTotal = state.transactions.reduce(function(sum, tx){
+          return (countsAsSpend(tx) && yearMonth(tx.date) === prev) ? sum + tx.amount : sum;
+        }, 0);
+        if(!prevTotal) return "";
+        var diff = total - prevTotal;
+        return '<div class="sum-note">上月全月 ' + fmt(prevTotal) + '（目前' + (diff > 0 ? '多' : '少') + ' ' + fmt(Math.abs(diff)) + '）</div>';
+      })() +
     '</div></div>';
 
     // pie chart: expenses grouped by category
@@ -2309,6 +2343,71 @@
 
   document.getElementById("platformListClose").addEventListener("click", closePlatformListModal);
   platformListOverlay.addEventListener("click", function(e){ if(e.target === platformListOverlay) closePlatformListModal(); });
+
+  // ---------- 搜尋 ----------
+  var searchOverlay = document.getElementById("searchOverlay");
+  var searchInput = document.getElementById("searchInput");
+  function runSearch(){
+    var q = searchInput.value.trim().toLowerCase();
+    var box = document.getElementById("searchResults");
+    var cnt = document.getElementById("searchCount");
+    if(!q){ box.innerHTML = ""; cnt.textContent = ""; return; }
+    var hits = state.transactions.filter(function(tx){
+      if(tx.type === "transfer") return false;
+      var acct = getAccount(tx.accountId), card = tx.cardId ? getCard(tx.cardId) : null;
+      var hay = [tx.category, tx.note, acct && acct.name, card && card.name, String(Math.round(tx.amount)), tx.date].join(" ").toLowerCase();
+      return hay.indexOf(q) >= 0;
+    }).sort(byDateDesc);
+    var sum = hits.reduce(function(t, tx){ return t + (tx.type === "expense" ? -tx.amount : tx.amount); }, 0);
+    cnt.textContent = "共 " + hits.length + " 筆" + (hits.length ? "，淨額 " + fmt(sum) : "") + (hits.length > 200 ? "（僅顯示最新 200 筆）" : "");
+    if(!hits.length){ box.innerHTML = '<div class="empty-state">找不到符合的紀錄。</div>'; return; }
+    box.innerHTML = '<table class="ledger"><thead><tr><th>日期</th><th>摘要</th><th>方式</th><th>帳戶/卡片</th><th class="num">提出</th><th class="num">存入</th><th></th></tr></thead><tbody>' +
+      hits.slice(0, 200).map(function(tx){ return renderTxRow(tx, null); }).join("") + '</tbody></table>';
+    bindRowActions(box);
+    box.querySelectorAll("tr[data-editid]").forEach(function(tr){
+      tr.addEventListener("click", function(){ searchOverlay.classList.remove("open"); });
+    });
+    box.querySelectorAll("[data-delid]").forEach(function(b){
+      b.addEventListener("click", function(){ setTimeout(runSearch, 0); });
+    });
+  }
+  document.getElementById("searchBtn").addEventListener("click", function(){
+    searchOverlay.classList.add("open"); searchInput.focus();
+  });
+  searchInput.addEventListener("input", runSearch);
+  document.getElementById("searchClose").addEventListener("click", function(){ searchOverlay.classList.remove("open"); });
+  searchOverlay.addEventListener("click", function(e){ if(e.target === searchOverlay) searchOverlay.classList.remove("open"); });
+
+  // ---------- 備份 ----------
+  var BACKUP_KEYS = ["ledger-app-v1", "savings-goals-app-v1", "investing-app-v1", "wishlist-app-v1"];
+  document.getElementById("exportBtn").addEventListener("click", function(){
+    var data = {};
+    BACKUP_KEYS.forEach(function(k){ try{ var v = localStorage.getItem(k); if(v !== null) data[k] = v; }catch(e){} });
+    var blob = new Blob([JSON.stringify({ app: "finance-suite", version: 1, exportedAt: new Date().toISOString(), data: data }, null, 1)], { type: "application/json" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "記帳備份-" + todayStr() + ".json";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+  });
+  var importFile = document.getElementById("importFile");
+  document.getElementById("importBtn").addEventListener("click", function(){ importFile.value = ""; importFile.click(); });
+  importFile.addEventListener("change", function(){
+    var f = importFile.files && importFile.files[0];
+    if(!f) return;
+    var rd = new FileReader();
+    rd.onload = function(){
+      var obj;
+      try{ obj = JSON.parse(rd.result); }catch(e){ alert("無法讀取這個檔案，請選擇匯出的備份檔。"); return; }
+      if(!obj || obj.app !== "finance-suite" || !obj.data){ alert("這不是記帳備份檔。"); return; }
+      if(!confirm("匯入會用備份檔取代目前這台裝置上的記帳、存錢目標與投資紀錄資料，確定要匯入嗎？")) return;
+      BACKUP_KEYS.forEach(function(k){
+        if(typeof obj.data[k] === "string"){ try{ localStorage.setItem(k, obj.data[k]); }catch(e){} }
+      });
+      location.reload();
+    };
+    rd.readAsText(f);
+  });
 
   render();
 })();
